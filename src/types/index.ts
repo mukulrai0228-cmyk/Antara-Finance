@@ -106,3 +106,19 @@ export interface CardPaymentHistory {
   date: string;
   notes?: string;
 }
+
+export interface LoanEMI {
+  id: string;
+  type: 'Loan' | 'EMI';
+  name: string;
+  amount: number;
+  interestRate?: number;
+  tenureMonths: number;
+  startDate: string; // YYYY-MM-DD
+  endDate: string; // YYYY-MM-DD
+  vehicleId?: string; // Links to vehicle
+  cardId?: string; // Links to credit card
+  subType?: string; // e.g. 'Car Loan', 'Bike Loan', 'No Cost EMI', etc.
+}
+
+

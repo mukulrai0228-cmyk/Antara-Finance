@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useFinance } from '../context/FinanceContext';
-import { X, Calendar as CalIcon, Tag, User as PersonIcon, CreditCard, HelpCircle } from 'lucide-react';
+import { X, Calendar as CalIcon, HelpCircle, ChevronDown } from 'lucide-react';
 import { TransactionCategory, TransactionTag, TransactionType, PaymentMethodType } from '../types';
 
 interface AddExpenseModalProps {
@@ -45,7 +45,7 @@ export const AddExpenseModal: React.FC<AddExpenseModalProps> = ({ isOpen, onClos
   const [amount, setAmount] = useState('');
   const [type, setType] = useState<'Spent' | 'Give' | 'Borrowed'>('Spent');
   const [category, setCategory] = useState<TransactionCategory>('Food');
-  const [selectedTags, setSelectedTags] = useState<TransactionTag[]>([]);
+  const [selectedTags, setSelectedTags] = useState<TransactionTag[]>(['Family']);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethodType>('UPI');
   const [selectedCardId, setSelectedCardId] = useState<string>('');
   const [notes, setNotes] = useState('');
@@ -57,20 +57,21 @@ export const AddExpenseModal: React.FC<AddExpenseModalProps> = ({ isOpen, onClos
   // Set default date when opened or prefilledDate changes
   useEffect(() => {
     if (isOpen) {
+      const todayStr = new Date().toISOString().split('T')[0];
       if (prefilledDate) {
         setDate(prefilledDate);
       } else {
-        setDate(new Date().toISOString().split('T')[0]);
+        setDate(todayStr);
       }
       // Reset form
       setAmount('');
       setType('Spent');
       setCategory('Food');
-      setSelectedTags([]);
+      setSelectedTags(['Family']);
       setPaymentMethod('UPI');
       setNotes('');
       setPersonName('');
-      setExpectedReturnDate('');
+      setExpectedReturnDate(todayStr);
       setSelectedVehicleId('');
       if (cards.length > 0) {
         setSelectedCardId(cards[0].id);
@@ -80,21 +81,49 @@ export const AddExpenseModal: React.FC<AddExpenseModalProps> = ({ isOpen, onClos
     }
   }, [isOpen, prefilledDate, cards]);
 
-  // Handle Tag toggle
-  const toggleTag = (tag: TransactionTag) => {
-    if (selectedTags.includes(tag)) {
-      setSelectedTags(selectedTags.filter((t) => t !== tag));
+  const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const rawVal = e.target.value;
+    if (!rawVal || rawVal === '₹' || rawVal === '₹ ') {
+      setAmount('');
+      return;
+    }
+    const cleanVal = rawVal.replace(/[^\d]/g, '');
+    if (!cleanVal) {
+      setAmount('');
+      return;
+    }
+    const num = parseInt(cleanVal, 10);
+    setAmount(`₹ ${num.toLocaleString('en-IN')}`);
+  };
+
+  const handlePersonChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const val = e.target.value;
+    if (val === '__add_new__') {
+      const name = prompt('Enter the name of the new person:');
+      if (name && name.trim()) {
+        const trimmed = name.trim();
+        const existing = people.find((p) => p.name.toLowerCase() === trimmed.toLowerCase());
+        if (existing) {
+          setPersonName(existing.name);
+        } else {
+          addPerson(trimmed);
+          setPersonName(trimmed);
+        }
+      } else {
+        setPersonName('');
+      }
     } else {
-      setSelectedTags([...selectedTags, tag]);
+      setPersonName(val);
     }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const amountVal = parseFloat(amount);
+    const cleanAmount = amount.replace(/[^\d]/g, '');
+    const amountVal = parseFloat(cleanAmount);
     if (isNaN(amountVal) || amountVal <= 0) return;
 
-    // Check HDFC CC bill payment scenario:
+    // Check CC bill payment scenario:
     if (type === 'Spent' && category === 'Bills' && paymentMethod !== 'Credit Card' && selectedCardId) {
       payCreditCardBill(selectedCardId, amountVal, paymentMethod);
     } else {
@@ -132,81 +161,80 @@ export const AddExpenseModal: React.FC<AddExpenseModalProps> = ({ isOpen, onClos
 
   return (
     <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
-      <div className="bg-white rounded-3xl border border-slate-200 shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto p-6 sm:p-8 animate-slide-up relative">
+      <div className="bg-white rounded-3xl border border-slate-200/60 shadow-xl max-w-lg w-full max-h-[95vh] overflow-y-auto p-6 sm:p-8 animate-slide-up relative">
         
         {/* Header */}
-        <div className="flex justify-between items-center pb-4 border-b border-slate-100">
-          <div>
-            <h3 className="text-xl font-bold text-slate-900">Add Transaction</h3>
-            <p className="text-xs text-slate-500">Record your logs instantly.</p>
-          </div>
+        <div className="flex justify-between items-center mb-6">
+          <h3 className="text-2xl font-bold text-slate-900">Add Transaction</h3>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-700 transition-all"
+            type="button"
+            className="w-9 h-9 flex items-center justify-center rounded-full bg-slate-100 hover:bg-slate-200 text-slate-800 transition-all focus:outline-none"
           >
-            <X className="w-5 h-5" />
+            <X className="w-5 h-5 stroke-[2.5]" />
           </button>
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="space-y-5 mt-4">
+        <form onSubmit={handleSubmit} className="space-y-6">
           
-          {/* Amount Input */}
+          {/* Type Selection Tabs */}
           <div>
-            <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">
-              Amount (₹)
-            </label>
-            <div className="relative">
-              <span className="absolute left-4 top-1/2 -translate-y-1/2 font-bold text-slate-400 text-lg">
-                ₹
-              </span>
-              <input
-                type="number"
-                required
-                placeholder="0.00"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200/80 rounded-2xl text-slate-900 font-bold focus:outline-none focus:border-blue-500 transition-all text-lg"
-              />
+            <div className="flex bg-[#e5e7eb] p-1 rounded-full">
+              {(['Spent', 'Give', 'Borrowed'] as const).map((t, idx, arr) => {
+                const isActive = type === t;
+                const showSeparator = idx > 0 && !isActive && type !== arr[idx - 1];
+
+                return (
+                  <React.Fragment key={t}>
+                    {showSeparator && (
+                      <div className="w-[1.5px] h-4 bg-slate-400/40 self-center" />
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => setType(t)}
+                      className={`flex-1 py-3 text-sm font-semibold rounded-full transition-all ${
+                        isActive
+                          ? 'bg-white text-slate-900 shadow-sm'
+                          : 'text-slate-500 hover:text-slate-800'
+                      }`}
+                    >
+                      {t}
+                    </button>
+                  </React.Fragment>
+                );
+              })}
             </div>
           </div>
 
-          {/* Type Selection Tabs */}
+          {/* Amount Input */}
           <div>
-            <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">
-              Type
+            <label className="block text-sm font-semibold text-slate-500 mb-2">
+              Amount (₹)
             </label>
-            <div className="flex bg-slate-100 p-1 rounded-2xl border border-slate-200/40">
-              {(['Spent', 'Give', 'Borrowed'] as const).map((t) => (
-                <button
-                  type="button"
-                  key={t}
-                  onClick={() => setType(t)}
-                  className={`flex-1 py-2 text-xs font-bold rounded-xl transition-all ${
-                    type === t
-                      ? 'bg-blue-600 text-white shadow-sm'
-                      : 'text-slate-500 hover:text-slate-800'
-                  }`}
-                >
-                  {t === 'Give' ? 'Give' : t === 'Borrowed' ? 'Borrowed' : 'Spent'}
-                </button>
-              ))}
-            </div>
+            <input
+              type="text"
+              required
+              placeholder="₹ 2,000"
+              value={amount}
+              onChange={handleAmountChange}
+              className="w-full px-4 py-4 bg-[#f3f4f6] rounded-2xl text-slate-900 font-bold text-lg focus:outline-none focus:ring-0 border-0"
+            />
           </div>
 
           {/* SPENT SECTION */}
           {type === 'Spent' && (
-            <div className="space-y-4 animate-fade-in">
+            <div className="space-y-5 animate-fade-in">
               {/* Category */}
               <div>
-                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">
+                <label className="block text-sm font-semibold text-slate-500 mb-2">
                   Category
                 </label>
                 <div className="relative">
                   <select
                     value={category}
                     onChange={(e) => setCategory(e.target.value as TransactionCategory)}
-                    className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-2xl text-slate-800 focus:outline-none focus:border-blue-500 transition-all font-semibold text-base sm:text-xs appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2020%2020%22%20fill%3D%22none%22%3E%3Cpath%20d%3D%22M7%209l3%203%203-3%22%20stroke%3D%22%2364748B%22%20stroke-width%3D%221.5%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%2F%3E%3C%2Fsvg%3E')] bg-[length:1.25rem_1.25rem] bg-[right_0.75rem_center] bg-no-repeat pr-10"
+                    className="w-full px-4 py-3 bg-[#f3f4f6] rounded-2xl text-slate-900 font-semibold text-base appearance-none focus:outline-none focus:ring-0 border-0"
                   >
                     {CATEGORIES.map((cat) => (
                       <option key={cat} value={cat}>
@@ -214,92 +242,104 @@ export const AddExpenseModal: React.FC<AddExpenseModalProps> = ({ isOpen, onClos
                       </option>
                     ))}
                   </select>
+                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-4 text-slate-500">
+                    <ChevronDown className="w-5 h-5 stroke-[1.5]" />
+                  </div>
                 </div>
               </div>
 
-              {/* Payment Method & Card Selection */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                <div>
-                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">
-                    Payment Method
+              {/* Payment Method */}
+              <div>
+                <label className="block text-sm font-semibold text-slate-500 mb-2">
+                  Payment Method
+                </label>
+                <div className="relative">
+                  <select
+                    value={paymentMethod}
+                    onChange={(e) => setPaymentMethod(e.target.value as PaymentMethodType)}
+                    className="w-full px-4 py-3 bg-[#f3f4f6] rounded-2xl text-slate-900 font-semibold text-base appearance-none focus:outline-none focus:ring-0 border-0"
+                  >
+                    <option value="UPI">UPI (GPay/PhonePe)</option>
+                    <option value="Cash">Cash</option>
+                    <option value="Credit Card">Credit Card</option>
+                    <option value="Debit Card">Debit Card</option>
+                  </select>
+                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-4 text-slate-500">
+                    <ChevronDown className="w-5 h-5 stroke-[1.5]" />
+                  </div>
+                </div>
+              </div>
+
+              {/* Credit Card Details Conditional Selection */}
+              {paymentMethod === 'Credit Card' && cards.length > 0 && (
+                <div className="animate-fade-in">
+                  <label className="block text-sm font-semibold text-slate-500 mb-2">
+                    Select Card
                   </label>
                   <div className="relative">
                     <select
-                      value={paymentMethod}
-                      onChange={(e) => setPaymentMethod(e.target.value as PaymentMethodType)}
-                      className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-2xl text-slate-800 focus:outline-none focus:border-blue-500 transition-all font-semibold text-base sm:text-xs appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2020%2020%22%20fill%3D%22none%22%3E%3Cpath%20d%3D%22M7%209l3%203%203-3%22%20stroke%3D%22%2364748B%22%20stroke-width%3D%221.5%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%2F%3E%3C%2Fsvg%3E')] bg-[length:1.25rem_1.25rem] bg-[right_0.75rem_center] bg-no-repeat pr-10"
+                      value={selectedCardId}
+                      onChange={(e) => setSelectedCardId(e.target.value)}
+                      className="w-full px-4 py-3 bg-[#f3f4f6] rounded-2xl text-slate-900 font-semibold text-base appearance-none focus:outline-none focus:ring-0 border-0"
                     >
-                      <option value="UPI">UPI (GPay/PhonePe)</option>
-                      <option value="Cash">Cash</option>
-                      <option value="Credit Card">Credit Card</option>
-                      <option value="Debit Card">Debit Card</option>
+                      {cards.map((c) => (
+                        <option key={c.id} value={c.id}>
+                          {c.bankName} {c.cardName}
+                        </option>
+                      ))}
                     </select>
+                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-4 text-slate-500">
+                      <ChevronDown className="w-5 h-5 stroke-[1.5]" />
+                    </div>
                   </div>
                 </div>
+              )}
 
-                {paymentMethod === 'Credit Card' && cards.length > 0 && (
-                  <div>
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">
-                      Select Card
-                    </label>
-                    <div className="relative">
-                      <select
-                        value={selectedCardId}
-                        onChange={(e) => setSelectedCardId(e.target.value)}
-                        className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-2xl text-slate-800 focus:outline-none focus:border-blue-500 transition-all font-semibold text-base sm:text-xs appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2020%2020%22%20fill%3D%22none%22%3E%3Cpath%20d%3D%22M7%209l3%203%203-3%22%20stroke%3D%22%2364748B%22%20stroke-width%3D%221.5%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%2F%3E%3C%2Fsvg%3E')] bg-[length:1.25rem_1.25rem] bg-[right_0.75rem_center] bg-no-repeat pr-10"
-                      >
-                        {cards.map((c) => (
-                          <option key={c.id} value={c.id}>
-                            {c.bankName} {c.cardName}
-                          </option>
-                        ))}
-                      </select>
+              {/* CC Bill Payment Conditional Linkage */}
+              {category === 'Bills' && paymentMethod !== 'Credit Card' && cards.length > 0 && (
+                <div className="animate-fade-in">
+                  <label className="block text-sm font-semibold text-slate-500 mb-2 flex items-center gap-1">
+                    Pay Bill For Card <span title="Link this payment to a credit card to clear its due amount."><HelpCircle className="w-3 h-3 text-slate-400" /></span>
+                  </label>
+                  <div className="relative">
+                    <select
+                      value={selectedCardId}
+                      onChange={(e) => setSelectedCardId(e.target.value)}
+                      className="w-full px-4 py-3 bg-[#f3f4f6] rounded-2xl text-slate-900 font-semibold text-base appearance-none focus:outline-none focus:ring-0 border-0"
+                    >
+                      <option value="">-- None (General Bill) --</option>
+                      {cards.map((c) => (
+                        <option key={c.id} value={c.id}>
+                          {c.bankName} {c.cardName} (Due: ₹{c.currentDue.toLocaleString('en-IN')})
+                        </option>
+                      ))}
+                    </select>
+                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-4 text-slate-500">
+                      <ChevronDown className="w-5 h-5 stroke-[1.5]" />
                     </div>
                   </div>
-                )}
+                </div>
+              )}
 
-                {category === 'Bills' && paymentMethod !== 'Credit Card' && cards.length > 0 && (
-                  <div>
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5 flex items-center gap-1">
-                      Pay Bill For Card <span title="Link this payment to a credit card to clear its due amount."><HelpCircle className="w-3 h-3 text-slate-400" /></span>
-                    </label>
-                    <div className="relative">
-                      <select
-                        value={selectedCardId}
-                        onChange={(e) => setSelectedCardId(e.target.value)}
-                        className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-2xl text-slate-800 focus:outline-none focus:border-blue-500 transition-all font-semibold text-base sm:text-xs appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2020%2020%22%20fill%3D%22none%22%3E%3Cpath%20d%3D%22M7%209l3%203%203-3%22%20stroke%3D%22%2364748B%22%20stroke-width%3D%221.5%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%2F%3E%3C%2Fsvg%3E')] bg-[length:1.25rem_1.25rem] bg-[right_0.75rem_center] bg-no-repeat pr-10"
-                      >
-                        <option value="">-- None (General Bill) --</option>
-                        {cards.map((c) => (
-                          <option key={c.id} value={c.id}>
-                            {c.bankName} {c.cardName} (Due: ₹{c.currentDue})
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Show a helper badge when CC bill payment is triggered */}
+              {/* CC Bill Auto-Sync Badge */}
               {isCCBillPayment && selectedCardId && (
-                <div className="bg-emerald-50 border border-emerald-100 rounded-xl p-3 text-xs text-emerald-800">
-                  🎉 <strong>Payment Auto-Sync:</strong> This will subtract ₹{amount || '0'} from
+                <div className="bg-emerald-50 border border-emerald-100 rounded-2xl p-3 text-xs text-emerald-800 animate-fade-in">
+                  🎉 <strong>Payment Auto-Sync:</strong> This will subtract {amount || '₹0'} from
                   your remaining salary/budget AND reduce the due balance of the selected Credit Card.
                 </div>
               )}
 
-              {/* Vehicle integration selector */}
+              {/* Vehicle Linkage Selector */}
               {vehicles.length > 0 && (
                 <div>
-                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">
+                  <label className="block text-sm font-semibold text-slate-500 mb-2">
                     Link to Vehicle (Optional)
                   </label>
                   <div className="relative">
                     <select
                       value={selectedVehicleId}
                       onChange={(e) => setSelectedVehicleId(e.target.value)}
-                      className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-2xl text-slate-800 focus:outline-none focus:border-blue-500 transition-all font-semibold text-base sm:text-xs appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2020%2020%22%20fill%3D%22none%22%3E%3Cpath%20d%3D%22M7%209l3%203%203-3%22%20stroke%3D%22%2364748B%22%20stroke-width%3D%221.5%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%2F%3E%3C%2Fsvg%3E')] bg-[length:1.25rem_1.25rem] bg-[right_0.75rem_center] bg-no-repeat pr-10"
+                      className="w-full px-4 py-3 bg-[#f3f4f6] rounded-2xl text-slate-900 font-semibold text-base appearance-none focus:outline-none focus:ring-0 border-0"
                     >
                       <option value="">-- None (General Spend) --</option>
                       {vehicles.map((v) => (
@@ -308,156 +348,144 @@ export const AddExpenseModal: React.FC<AddExpenseModalProps> = ({ isOpen, onClos
                         </option>
                       ))}
                     </select>
+                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-4 text-slate-500">
+                      <ChevronDown className="w-5 h-5 stroke-[1.5]" />
+                    </div>
                   </div>
                 </div>
               )}
 
-              {/* Tags */}
+              {/* Tags Dropdown */}
               <div>
-                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5 flex justify-between items-center">
-                  <span>Tags</span>
-                  {selectedTags.length > 0 && (
-                    <button
-                      type="button"
-                      onClick={() => setSelectedTags([])}
-                      className="text-[9px] text-blue-600 hover:text-blue-700 font-bold normal-case hover:underline"
-                    >
-                      Clear all
-                    </button>
-                  )}
+                <label className="block text-sm font-semibold text-slate-500 mb-2">
+                  Tags
                 </label>
-                <div className="relative mb-2">
+                <div className="relative">
                   <select
-                    value=""
-                    onChange={(e) => {
-                      const tag = e.target.value as TransactionTag;
-                      if (tag) {
-                        toggleTag(tag);
-                        e.target.value = "";
-                      }
-                    }}
-                    className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-2xl text-slate-800 focus:outline-none focus:border-blue-500 transition-all font-semibold text-base sm:text-xs appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2020%2020%22%20fill%3D%22none%22%3E%3Cpath%20d%3D%22M7%209l3%203%203-3%22%20stroke%3D%22%2364748B%22%20stroke-width%3D%221.5%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%2F%3E%3C%2Fsvg%3E')] bg-[length:1.25rem_1.25rem] bg-[right_0.75rem_center] bg-no-repeat pr-10"
+                    value={selectedTags[0] || 'Family'}
+                    onChange={(e) => setSelectedTags([e.target.value as TransactionTag])}
+                    className="w-full px-4 py-3 bg-[#f3f4f6] rounded-2xl text-slate-900 font-semibold text-base appearance-none focus:outline-none focus:ring-0 border-0"
                   >
-                    <option value="">-- Choose tags... --</option>
                     {TAGS.map((tag) => (
                       <option key={tag} value={tag}>
-                        {tag} {selectedTags.includes(tag) ? '✓' : ''}
+                        {tag}
                       </option>
                     ))}
                   </select>
-                </div>
-                {selectedTags.length > 0 && (
-                  <div className="flex flex-wrap gap-1.5 p-2 bg-slate-50 border border-slate-100 rounded-2xl">
-                    {selectedTags.map((tag) => (
-                      <span
-                        key={tag}
-                        onClick={() => toggleTag(tag)}
-                        className="px-2.5 py-1 bg-blue-50 text-blue-600 border border-blue-200 rounded-full text-[10px] font-semibold flex items-center gap-1 cursor-pointer hover:bg-blue-100 transition-all select-none"
-                      >
-                        <Tag className="w-3 h-3 text-blue-500" />
-                        {tag}
-                        <X className="w-3.5 h-3.5 text-blue-400 hover:text-blue-600" />
-                      </span>
-                    ))}
+                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-4 text-slate-500">
+                    <ChevronDown className="w-5 h-5 stroke-[1.5]" />
                   </div>
-                )}
+                </div>
               </div>
 
-              {/* Date and Notes */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                <div>
-                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">
-                    Date
-                  </label>
-                  <div className="relative">
-                    <CalIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                    <input
-                      type="date"
-                      required
-                      value={date}
-                      onChange={(e) => setDate(e.target.value)}
-                      className="w-full pl-9 pr-3 py-2.5 bg-slate-50 border border-slate-200/80 rounded-2xl text-slate-800 text-base sm:text-xs focus:outline-none focus:border-blue-500 font-semibold"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">
-                    Notes
-                  </label>
+              {/* Date Input */}
+              <div>
+                <label className="block text-sm font-semibold text-slate-500 mb-2">
+                  Date
+                </label>
+                <div className="relative">
+                  <CalIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-800" />
                   <input
-                    type="text"
-                    placeholder="e.g. Swiggy lunch, cab split"
-                    value={notes}
-                    onChange={(e) => setNotes(e.target.value)}
-                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200/80 rounded-2xl text-slate-800 text-base sm:text-xs focus:outline-none focus:border-blue-500 font-semibold"
+                    type="date"
+                    required
+                    value={date}
+                    onChange={(e) => setDate(e.target.value)}
+                    className="w-full pl-12 pr-4 py-3 bg-[#f3f4f6] rounded-2xl text-slate-900 font-semibold text-base focus:outline-none focus:ring-0 border-0"
                   />
                 </div>
+              </div>
+
+              {/* Remark/Notes Input */}
+              <div>
+                <label className="block text-sm font-semibold text-slate-500 mb-2">
+                  Remark
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g, Swiggy lunch, cab split"
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  className="w-full px-4 py-3 bg-[#f3f4f6] rounded-2xl text-slate-900 font-semibold text-base focus:outline-none focus:ring-0 border-0"
+                />
               </div>
             </div>
           )}
 
           {/* GIVE SECTION */}
           {type === 'Give' && (
-            <div className="space-y-4 animate-fade-in">
+            <div className="space-y-5 animate-fade-in">
+              {/* Lent to Dropdown */}
               <div>
-                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">
-                  Lent To (Person Name)
+                <label className="block text-sm font-semibold text-slate-500 mb-2">
+                  Lent to (Person Name)
                 </label>
-                <input
-                  type="text"
-                  required
-                  list="people-list"
-                  placeholder="Select or enter contact name"
-                  value={personName}
-                  onChange={(e) => setPersonName(e.target.value)}
-                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200/80 rounded-2xl text-slate-800 text-base sm:text-xs focus:outline-none focus:border-blue-500 font-semibold"
-                />
-                <datalist id="people-list">
-                  {people.map((p) => (
-                    <option key={p.id} value={p.name} />
-                  ))}
-                </datalist>
+                <div className="relative">
+                  <select
+                    value={personName}
+                    onChange={handlePersonChange}
+                    className="w-full px-4 py-3 bg-[#f3f4f6] rounded-2xl text-slate-900 font-semibold text-base appearance-none focus:outline-none focus:ring-0 border-0"
+                    required
+                  >
+                    <option value="">Select contact name</option>
+                    {people.map((p) => (
+                      <option key={p.id} value={p.name}>
+                        {p.name}
+                      </option>
+                    ))}
+                    <option value="__add_new__">+ Add New Person...</option>
+                  </select>
+                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-4 text-slate-500">
+                    <ChevronDown className="w-5 h-5 stroke-[1.5]" />
+                  </div>
+                </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+              {/* Date & Return Date Side-by-Side Grid */}
+              <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">
+                  <label className="block text-sm font-semibold text-slate-500 mb-2">
                     Date
                   </label>
-                  <input
-                    type="date"
-                    required
-                    value={date}
-                    onChange={(e) => setDate(e.target.value)}
-                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200/80 rounded-2xl text-slate-800 text-base sm:text-xs focus:outline-none focus:border-blue-500 font-semibold"
-                  />
+                  <div className="relative">
+                    <CalIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-800" />
+                    <input
+                      type="date"
+                      required
+                      value={date}
+                      onChange={(e) => setDate(e.target.value)}
+                      className="w-full pl-12 pr-4 py-3 bg-[#f3f4f6] rounded-2xl text-slate-900 font-semibold text-base focus:outline-none focus:ring-0 border-0"
+                    />
+                  </div>
                 </div>
 
                 <div>
-                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">
+                  <label className="block text-sm font-semibold text-slate-500 mb-2">
                     Return Date (Expected)
                   </label>
-                  <input
-                    type="date"
-                    required
-                    value={expectedReturnDate}
-                    onChange={(e) => setExpectedReturnDate(e.target.value)}
-                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200/80 rounded-2xl text-slate-800 text-base sm:text-xs focus:outline-none focus:border-blue-500 font-semibold"
-                  />
+                  <div className="relative">
+                    <CalIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-800" />
+                    <input
+                      type="date"
+                      required
+                      value={expectedReturnDate}
+                      onChange={(e) => setExpectedReturnDate(e.target.value)}
+                      className="w-full pl-12 pr-4 py-3 bg-[#f3f4f6] rounded-2xl text-slate-900 font-semibold text-base focus:outline-none focus:ring-0 border-0"
+                    />
+                  </div>
                 </div>
               </div>
 
+              {/* Reason / Notes */}
               <div>
-                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">
+                <label className="block text-sm font-semibold text-slate-500 mb-2">
                   Reason / Notes
                 </label>
                 <input
                   type="text"
-                  placeholder="e.g. Dinner share, cab split"
+                  placeholder="e.g, Emergency Need"
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
-                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200/80 rounded-2xl text-slate-800 text-base sm:text-xs focus:outline-none focus:border-blue-500 font-semibold"
+                  className="w-full px-4 py-3 bg-[#f3f4f6] rounded-2xl text-slate-900 font-semibold text-base focus:outline-none focus:ring-0 border-0"
                 />
               </div>
             </div>
@@ -465,82 +493,96 @@ export const AddExpenseModal: React.FC<AddExpenseModalProps> = ({ isOpen, onClos
 
           {/* BORROWED SECTION */}
           {type === 'Borrowed' && (
-            <div className="space-y-4 animate-fade-in">
+            <div className="space-y-5 animate-fade-in">
+              {/* Borrowed From Dropdown */}
               <div>
-                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">
+                <label className="block text-sm font-semibold text-slate-500 mb-2">
                   Borrowed From (Person Name)
                 </label>
-                <input
-                  type="text"
-                  required
-                  list="people-list"
-                  placeholder="Select or enter contact name"
-                  value={personName}
-                  onChange={(e) => setPersonName(e.target.value)}
-                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200/80 rounded-2xl text-slate-800 text-base sm:text-xs focus:outline-none focus:border-blue-500 font-semibold"
-                />
-                <datalist id="people-list">
-                  {people.map((p) => (
-                    <option key={p.id} value={p.name} />
-                  ))}
-                </datalist>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                <div>
-                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">
-                    Borrowed When (Date)
-                  </label>
-                  <input
-                    type="date"
+                <div className="relative">
+                  <select
+                    value={personName}
+                    onChange={handlePersonChange}
+                    className="w-full px-4 py-3 bg-[#f3f4f6] rounded-2xl text-slate-900 font-semibold text-base appearance-none focus:outline-none focus:ring-0 border-0"
                     required
-                    value={date}
-                    onChange={(e) => setDate(e.target.value)}
-                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200/80 rounded-2xl text-slate-800 text-base sm:text-xs focus:outline-none focus:border-blue-500 font-semibold"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">
-                    Return When (Expected Date)
-                  </label>
-                  <input
-                    type="date"
-                    required
-                    value={expectedReturnDate}
-                    onChange={(e) => setExpectedReturnDate(e.target.value)}
-                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200/80 rounded-2xl text-slate-800 text-base sm:text-xs focus:outline-none focus:border-blue-500 font-semibold"
-                  />
+                  >
+                    <option value="">Select contact name</option>
+                    {people.map((p) => (
+                      <option key={p.id} value={p.name}>
+                        {p.name}
+                      </option>
+                    ))}
+                    <option value="__add_new__">+ Add New Person...</option>
+                  </select>
+                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-4 text-slate-500">
+                    <ChevronDown className="w-5 h-5 stroke-[1.5]" />
+                  </div>
                 </div>
               </div>
 
+              {/* Date & Return Date Side-by-Side Grid */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-semibold text-slate-500 mb-2">
+                    Date
+                  </label>
+                  <div className="relative">
+                    <CalIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-800" />
+                    <input
+                      type="date"
+                      required
+                      value={date}
+                      onChange={(e) => setDate(e.target.value)}
+                      className="w-full pl-12 pr-4 py-3 bg-[#f3f4f6] rounded-2xl text-slate-900 font-semibold text-base focus:outline-none focus:ring-0 border-0"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-slate-500 mb-2">
+                    Return Date (Expected)
+                  </label>
+                  <div className="relative">
+                    <CalIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-800" />
+                    <input
+                      type="date"
+                      required
+                      value={expectedReturnDate}
+                      onChange={(e) => setExpectedReturnDate(e.target.value)}
+                      className="w-full pl-12 pr-4 py-3 bg-[#f3f4f6] rounded-2xl text-slate-900 font-semibold text-base focus:outline-none focus:ring-0 border-0"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Why (Notes) */}
               <div>
-                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">
+                <label className="block text-sm font-semibold text-slate-500 mb-2">
                   Why (Notes)
                 </label>
                 <input
                   type="text"
-                  placeholder="e.g. For movie tickets advance"
+                  placeholder="e.g, For Bills Payment"
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
-                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200/80 rounded-2xl text-slate-800 text-base sm:text-xs focus:outline-none focus:border-blue-500 font-semibold"
+                  className="w-full px-4 py-3 bg-[#f3f4f6] rounded-2xl text-slate-900 font-semibold text-base focus:outline-none focus:ring-0 border-0"
                 />
               </div>
             </div>
           )}
 
           {/* Buttons */}
-          <div className="pt-4 border-t border-slate-100 flex justify-end gap-2">
+          <div className="pt-4 flex justify-between gap-4">
             <button
               type="button"
               onClick={onClose}
-              className="px-5 py-2.5 border border-slate-200 hover:bg-slate-50 rounded-xl text-xs font-semibold text-slate-600 transition-all"
+              className="flex-1 py-3.5 border border-blue-600 hover:bg-blue-50 text-blue-600 rounded-full text-base font-semibold transition-all focus:outline-none text-center"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-sm hover:shadow-md"
+              className="flex-1 py-3.5 bg-blue-600 hover:bg-blue-700 text-white rounded-full text-base font-semibold transition-all focus:outline-none text-center shadow-sm"
             >
               Save Transaction
             </button>

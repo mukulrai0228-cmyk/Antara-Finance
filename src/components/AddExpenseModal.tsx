@@ -161,10 +161,10 @@ export const AddExpenseModal: React.FC<AddExpenseModalProps> = ({ isOpen, onClos
 
   return (
     <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
-      <div className="bg-white rounded-3xl border border-slate-200/60 shadow-xl max-w-lg w-full max-h-[95vh] overflow-y-auto p-6 sm:p-8 animate-slide-up relative">
+      <div className="bg-white rounded-3xl border border-slate-200/60 shadow-xl max-w-lg w-full max-h-[90vh] flex flex-col overflow-hidden animate-slide-up relative">
         
         {/* Header */}
-        <div className="flex justify-between items-center mb-6">
+        <div className="flex justify-between items-center px-6 sm:px-8 pt-6 sm:pt-8 pb-4 border-b border-slate-100 bg-white">
           <h3 className="text-2xl font-bold text-slate-900">Add Transaction</h3>
           <button
             onClick={onClose}
@@ -176,7 +176,10 @@ export const AddExpenseModal: React.FC<AddExpenseModalProps> = ({ isOpen, onClos
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="flex-1 flex flex-col min-h-0 overflow-hidden">
+          
+          {/* Scrollable Fields */}
+          <div className="flex-grow overflow-y-auto px-6 sm:px-8 py-6 space-y-6">
           
           {/* Type Selection Tabs */}
           <div>
@@ -571,8 +574,10 @@ export const AddExpenseModal: React.FC<AddExpenseModalProps> = ({ isOpen, onClos
             </div>
           )}
 
-          {/* Buttons */}
-          <div className="pt-4 flex justify-between gap-4">
+          </div>
+
+          {/* Fixed Footer Buttons */}
+          <div className="border-t border-slate-100 bg-white px-6 sm:px-8 py-4 flex justify-between gap-4 z-10">
             <button
               type="button"
               onClick={onClose}

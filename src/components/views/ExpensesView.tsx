@@ -45,6 +45,7 @@ export const ExpensesView: React.FC = () => {
 
   const year = 2026; // Track in 2026 for local consistency
   const monthIdx = MONTH_INDEX_MAP[currentMonth] ?? new Date().getMonth();
+  const realCurrentMonth = MONTHS[new Date().getMonth()];
 
   // Get days & layout parameters for Calendar
   const getDaysInMonth = (mIdx: number, yr: number) => new Date(yr, mIdx + 1, 0).getDate();
@@ -116,11 +117,14 @@ export const ExpensesView: React.FC = () => {
             onChange={(e) => setCurrentMonth(e.target.value)}
             className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-2xl text-xs font-semibold text-slate-800 focus:outline-none focus:border-blue-500 appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2020%2020%22%20fill%3D%22none%22%3E%3Cpath%20d%3D%22M7%209l3%203%203-3%22%20stroke%3D%22%2364748B%22%20stroke-width%3D%221.5%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%2F%3E%3C%2Fsvg%3E')] bg-[length:1.25rem_1.25rem] bg-[right_0.75rem_center] bg-no-repeat pr-10"
           >
-            {MONTHS.map((m) => (
-              <option key={m} value={m}>
-                {m} 2026
-              </option>
-            ))}
+            {MONTHS.map((m) => {
+              const isRealCurrent = m === realCurrentMonth;
+              return (
+                <option key={m} value={m}>
+                  {m} 2026 {isRealCurrent ? '(Current Month)' : ''}
+                </option>
+              );
+            })}
           </select>
         </div>
 
@@ -128,6 +132,7 @@ export const ExpensesView: React.FC = () => {
         <div className="hidden sm:flex flex-wrap items-center gap-1 max-w-full">
           {MONTHS.map((m) => {
             const isSel = currentMonth === m;
+            const isRealCurrent = m === realCurrentMonth;
             return (
               <button
                 key={m}
@@ -135,10 +140,12 @@ export const ExpensesView: React.FC = () => {
                 className={`px-3 py-1.5 rounded-xl text-xs font-semibold shrink-0 transition-all ${
                   isSel
                     ? 'bg-blue-600 text-white shadow-sm'
-                    : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50'
+                    : isRealCurrent
+                      ? 'text-blue-655 bg-blue-50 border border-blue-200/80 hover:bg-blue-100/50'
+                      : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50'
                 }`}
               >
-                {m}
+                {m}{isRealCurrent && ' (Today)'}
               </button>
             );
           })}
@@ -156,7 +163,10 @@ export const ExpensesView: React.FC = () => {
             <span>List</span>
           </button>
           <button
-            onClick={() => setViewMode('calendar')}
+            onClick={() => {
+              setViewMode('calendar');
+              setCurrentMonth(realCurrentMonth);
+            }}
             className={`flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all ${
               viewMode === 'calendar' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-400'
             }`}
@@ -213,11 +223,15 @@ export const ExpensesView: React.FC = () => {
                   onClick={() => handleCalendarDayClick(dayNum)}
                   className={`aspect-square p-1.5 sm:p-2 border rounded-xl sm:rounded-2xl text-left flex flex-col justify-between hover:border-blue-300 hover:bg-slate-50/55 transition-all ${
                     isTodayDay
-                      ? 'border-blue-600 bg-blue-50/20'
+                      ? 'border-blue-500 bg-blue-50/30 shadow-sm ring-1 ring-blue-500/30'
                       : 'border-slate-100 bg-white'
                   }`}
                 >
-                  <span className={`text-[10px] sm:text-xs font-bold ${isTodayDay ? 'text-blue-600' : 'text-slate-500'}`}>
+                  <span className={`w-5.5 h-5.5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center text-[10px] sm:text-xs font-bold transition-all ${
+                    isTodayDay
+                      ? 'bg-blue-600 text-white shadow-sm'
+                      : 'text-slate-500'
+                  }`}>
                     {dayNum}
                   </span>
                   

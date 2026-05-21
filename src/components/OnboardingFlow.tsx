@@ -340,7 +340,7 @@ export const OnboardingFlow: React.FC = () => {
               <button
                 type="button"
                 onClick={addCard}
-                className="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold flex items-center justify-center gap-1 transition-all"
+                className="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-full text-xs font-semibold flex items-center justify-center gap-1 transition-all"
               >
                 <Plus className="w-3.5 h-3.5" /> Add Card
               </button>
@@ -409,7 +409,7 @@ export const OnboardingFlow: React.FC = () => {
               <button
                 type="button"
                 onClick={addVehicle}
-                className="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold flex items-center gap-1 transition-all"
+                className="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-full text-xs font-semibold flex items-center gap-1 transition-all"
               >
                 <Plus className="w-3.5 h-3.5" /> Add
               </button>
@@ -475,7 +475,7 @@ export const OnboardingFlow: React.FC = () => {
           {step > 1 && step < 5 ? (
             <button
               onClick={handlePrevStep}
-              className="px-5 py-2.5 border border-slate-200 text-slate-500 hover:text-slate-800 rounded-xl text-sm font-semibold transition-all hover:bg-slate-50"
+              className="px-5 py-2.5 border border-slate-200 text-slate-500 hover:text-slate-800 rounded-full text-sm font-semibold transition-all hover:bg-slate-50"
             >
               Back
             </button>
@@ -487,14 +487,14 @@ export const OnboardingFlow: React.FC = () => {
             <button
               onClick={handleNextStep}
               disabled={step === 1 && !fullName}
-              className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-semibold transition-all shadow-sm hover:shadow-md flex items-center gap-1.5 disabled:opacity-50"
+              className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-full text-sm font-semibold transition-all shadow-sm hover:shadow-md flex items-center gap-1.5 disabled:opacity-50"
             >
               Continue <ChevronRight className="w-4 h-4" />
             </button>
           ) : (
             <button
               onClick={handleFinish}
-              className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-bold transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2"
+              className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-full text-sm font-bold transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2"
             >
               Enter Dashboard <ArrowRight className="w-4 h-4" />
             </button>

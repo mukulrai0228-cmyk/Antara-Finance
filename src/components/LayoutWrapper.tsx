@@ -102,7 +102,7 @@ export const LayoutWrapper: React.FC<LayoutWrapperProps> = ({ activeTab, setActi
             </div>
             <button
               onClick={logout}
-              className="p-2 hover:bg-red-50 hover:text-red-650 rounded-xl text-slate-400 transition-all"
+              className="p-2 hover:bg-red-50 hover:text-red-650 rounded-full text-slate-400 transition-all"
               title="Logout"
             >
               <LogOut className="w-4 h-4" />
@@ -175,7 +175,7 @@ export const LayoutWrapper: React.FC<LayoutWrapperProps> = ({ activeTab, setActi
             </div>
             <button
               onClick={logout}
-              className="p-2 hover:bg-red-50 hover:text-red-550 rounded-xl text-slate-400"
+              className="p-2 hover:bg-red-50 hover:text-red-550 rounded-full text-slate-400"
             >
               <LogOut className="w-4 h-4" />
             </button>
@@ -193,7 +193,7 @@ export const LayoutWrapper: React.FC<LayoutWrapperProps> = ({ activeTab, setActi
           <div className="flex items-center gap-3">
             <button
               onClick={() => setIsSidebarOpen(true)}
-              className="lg:hidden p-2 rounded-xl border border-slate-250/60 hover:bg-slate-50 text-slate-600"
+              className="lg:hidden p-2 rounded-full border border-slate-250/60 hover:bg-slate-50 text-slate-600"
             >
               <Menu className="w-5 h-5" />
             </button>
@@ -209,7 +209,7 @@ export const LayoutWrapper: React.FC<LayoutWrapperProps> = ({ activeTab, setActi
             <div className="relative">
               <button
                 onClick={() => setIsMonthDropdownOpen(!isMonthDropdownOpen)}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-xs font-semibold text-slate-700 transition-all"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-slate-200 hover:bg-slate-50 text-xs font-semibold text-slate-700 transition-all"
               >
                 <span>{currentMonth} 2026</span>
                 <ChevronDown className="w-3.5 h-3.5 text-slate-450" />
@@ -223,7 +223,7 @@ export const LayoutWrapper: React.FC<LayoutWrapperProps> = ({ activeTab, setActi
                         setCurrentMonth(m);
                         setIsMonthDropdownOpen(false);
                       }}
-                      className={`px-2 py-1.5 rounded-xl text-center text-xs font-semibold ${
+                      className={`px-2 py-1.5 rounded-full text-center text-xs font-semibold ${
                         currentMonth === m
                           ? 'bg-blue-600 text-white'
                           : 'text-slate-600 hover:bg-slate-50'
@@ -239,7 +239,7 @@ export const LayoutWrapper: React.FC<LayoutWrapperProps> = ({ activeTab, setActi
             {/* Quick Add Expense */}
             <button
               onClick={() => setIsAddModalOpen(true)}
-              className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all shadow-sm hover:shadow-md"
+              className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white px-3.5 py-1.5 rounded-full text-xs font-bold transition-all shadow-sm hover:shadow-md"
             >
               <Plus className="w-4 h-4" />
               <span className="hidden sm:inline">Add Expense</span>
@@ -249,7 +249,7 @@ export const LayoutWrapper: React.FC<LayoutWrapperProps> = ({ activeTab, setActi
             <div className="relative">
               <button
                 onClick={() => setShowNotifications(!showNotifications)}
-                className="p-2 border border-slate-200 rounded-xl hover:bg-slate-50 text-slate-500 relative transition-all"
+                className="p-2 border border-slate-200 rounded-full hover:bg-slate-50 text-slate-500 relative transition-all"
               >
                 <Bell className="w-4 h-4" />
                 <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-blue-600 ring-2 ring-white" />
@@ -291,7 +291,7 @@ export const LayoutWrapper: React.FC<LayoutWrapperProps> = ({ activeTab, setActi
                   </div>
                   <button
                     onClick={logout}
-                    className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-left text-xs font-semibold text-red-500 hover:bg-red-50 mt-1 transition-all"
+                    className="w-full flex items-center gap-2 px-3 py-2 rounded-full text-left text-xs font-semibold text-red-500 hover:bg-red-50 mt-1 transition-all"
                   >
                     <LogOut className="w-4 h-4" />
                     <span>Log Out</span>

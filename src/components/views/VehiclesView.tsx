@@ -7,6 +7,7 @@ import {
   Bike,
   Plus,
   Trash2,
+  Edit2,
   Fuel,
   Wrench,
   ShieldCheck,
@@ -17,10 +18,18 @@ import {
   Sparkles,
   AlertCircle,
 } from 'lucide-react';
-import { VehicleType, VehicleExpenseType } from '../../types';
+import { VehicleType, VehicleExpenseType, Vehicle } from '../../types';
 
 export const VehiclesView: React.FC = () => {
-  const { vehicles, vehicleExpenses, addVehicle, deleteVehicle, addVehicleExpense, deleteVehicleExpense } = useFinance();
+  const { 
+    vehicles, 
+    vehicleExpenses, 
+    addVehicle, 
+    deleteVehicle, 
+    updateVehicle, 
+    addVehicleExpense, 
+    deleteVehicleExpense 
+  } = useFinance();
 
   const [isAddVehicleOpen, setIsAddVehicleOpen] = useState(false);
   const [vehName, setVehName] = useState('');
@@ -35,6 +44,13 @@ export const VehiclesView: React.FC = () => {
   const [expNotes, setExpNotes] = useState('');
   const [expMileage, setExpMileage] = useState('');
 
+  // Edit vehicle states
+  const [isEditVehicleOpen, setIsEditVehicleOpen] = useState(false);
+  const [editingVehicle, setEditingVehicle] = useState<Vehicle | null>(null);
+  const [editVehName, setEditVehName] = useState('');
+  const [editVehType, setEditVehType] = useState<VehicleType>('Car');
+  const [editRegNum, setEditRegNum] = useState('');
+
   const handleAddVehicle = (e: React.FormEvent) => {
     e.preventDefault();
     if (!vehName) return;
@@ -48,6 +64,22 @@ export const VehiclesView: React.FC = () => {
     setVehName('');
     setRegNum('');
     setIsAddVehicleOpen(false);
+  };
+
+  const handleUpdateVehicle = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingVehicle || !editVehName) return;
+
+    updateVehicle(editingVehicle.id, {
+      name: editVehName,
+      type: editVehType,
+      registrationNumber: editRegNum || undefined,
+    });
+
+    setEditingVehicle(null);
+    setEditVehName('');
+    setEditRegNum('');
+    setIsEditVehicleOpen(false);
   };
 
   const handleLogExpense = (e: React.FormEvent) => {
@@ -136,7 +168,7 @@ export const VehiclesView: React.FC = () => {
           <div className="flex gap-2">
             <button
               onClick={() => setIsAddVehicleOpen(true)}
-              className="px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-[10px] font-bold text-slate-700 hover:bg-slate-100 transition-all"
+              className="px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-full text-[10px] font-bold text-slate-700 hover:bg-slate-100 transition-all"
             >
               Add Vehicle
             </button>
@@ -146,7 +178,7 @@ export const VehiclesView: React.FC = () => {
                   setSelectedVehId(vehicles[0].id);
                   setIsLogExpenseOpen(true);
                 }}
-                className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-[10px] font-bold transition-all"
+                className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-full text-[10px] font-bold transition-all"
               >
                 Log Expense
               </button>
@@ -190,13 +222,28 @@ export const VehiclesView: React.FC = () => {
                     </div>
                   </div>
 
-                  <button
-                    onClick={() => deleteVehicle(veh.id)}
-                    className="p-1.5 hover:bg-red-50 text-slate-400 hover:text-red-500 rounded-xl transition-all"
-                    title="Remove Vehicle"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
+                  <div className="flex gap-1">
+                    <button
+                      onClick={() => {
+                        setEditingVehicle(veh);
+                        setEditVehName(veh.name);
+                        setEditVehType(veh.type);
+                        setEditRegNum(veh.registrationNumber || '');
+                        setIsEditVehicleOpen(true);
+                      }}
+                      className="p-1.5 hover:bg-slate-50 text-slate-400 hover:text-slate-700 rounded-xl transition-all"
+                      title="Edit Vehicle"
+                    >
+                      <Edit2 className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => deleteVehicle(veh.id)}
+                      className="p-1.5 hover:bg-red-50 text-slate-400 hover:text-red-500 rounded-xl transition-all"
+                      title="Remove Vehicle"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
 
                 {/* Substats */}
@@ -317,7 +364,7 @@ export const VehiclesView: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => setVehType('Car')}
-                    className={`py-2 rounded-xl text-xs font-bold border transition-all ${
+                    className={`py-2 rounded-full text-xs font-bold border transition-all ${
                       vehType === 'Car'
                         ? 'border-blue-600 bg-blue-50 text-blue-650'
                         : 'border-slate-200 text-slate-505 hover:bg-slate-50'
@@ -328,7 +375,7 @@ export const VehiclesView: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => setVehType('Bike')}
-                    className={`py-2 rounded-xl text-xs font-bold border transition-all ${
+                    className={`py-2 rounded-full text-xs font-bold border transition-all ${
                       vehType === 'Bike'
                         ? 'border-blue-600 bg-blue-50 text-blue-650'
                         : 'border-slate-200 text-slate-505 hover:bg-slate-50'
@@ -368,9 +415,95 @@ export const VehiclesView: React.FC = () => {
 
               <button
                 type="submit"
-                className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all mt-4"
+                className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-full text-xs font-bold transition-all mt-4"
               >
-                Register Vehicle
+                Save Vehicle
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ---------------- MODAL: Edit Vehicle ---------------- */}
+      {isEditVehicleOpen && editingVehicle && (
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl border border-slate-200 shadow-xl max-w-sm w-full p-6 animate-slide-up relative">
+            <div className="flex justify-between items-center pb-4 border-b border-slate-100 mb-4">
+              <h3 className="text-md font-bold text-slate-800">Edit Vehicle Details</h3>
+              <button
+                onClick={() => {
+                  setIsEditVehicleOpen(false);
+                  setEditingVehicle(null);
+                }}
+                className="text-slate-400 hover:text-slate-700 text-xs font-semibold"
+              >
+                Close
+              </button>
+            </div>
+
+            <form onSubmit={handleUpdateVehicle} className="space-y-4">
+              <div>
+                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1.5">
+                  Vehicle Type
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setEditVehType('Car')}
+                    className={`py-2 rounded-full text-xs font-bold border transition-all ${
+                      editVehType === 'Car'
+                        ? 'border-blue-600 bg-blue-50 text-blue-650'
+                        : 'border-slate-200 text-slate-505 hover:bg-slate-50'
+                    }`}
+                  >
+                    🚗 Car
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setEditVehType('Bike')}
+                    className={`py-2 rounded-full text-xs font-bold border transition-all ${
+                      editVehType === 'Bike'
+                        ? 'border-blue-600 bg-blue-50 text-blue-650'
+                        : 'border-slate-200 text-slate-505 hover:bg-slate-50'
+                    }`}
+                  >
+                    🏍️ Bike
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1.5">
+                  Model / Nickname
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Honda City, Pulsar 150"
+                  value={editVehName}
+                  onChange={(e) => setEditVehName(e.target.value)}
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-blue-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1.5">
+                  Registration Number (Optional)
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. MH 12 AB 1234"
+                  value={editRegNum}
+                  onChange={(e) => setEditRegNum(e.target.value)}
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-blue-500 uppercase font-semibold"
+                />
+              </div>
+
+              <button
+                type="submit"
+                className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-full text-xs font-bold transition-all mt-4"
+              >
+                Save Changes
               </button>
             </form>
           </div>
@@ -497,9 +630,9 @@ export const VehiclesView: React.FC = () => {
                   // Let's manually trigger log submit helper since we have that.
                   // Wait, onSubmit of the form is already handled, let's keep it simple!
                 }}
-                className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all mt-4"
+                className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-full text-xs font-bold transition-all mt-4"
               >
-                Log Expense
+                Confirm Expense
               </button>
             </form>
           </div>

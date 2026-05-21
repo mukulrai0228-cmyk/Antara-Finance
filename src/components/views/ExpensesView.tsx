@@ -137,7 +137,7 @@ export const ExpensesView: React.FC = () => {
               <button
                 key={m}
                 onClick={() => setCurrentMonth(m)}
-                className={`px-3 py-1.5 rounded-xl text-xs font-semibold shrink-0 transition-all ${
+                className={`px-3 py-1.5 rounded-full text-xs font-semibold shrink-0 transition-all ${
                   isSel
                     ? 'bg-blue-600 text-white shadow-sm'
                     : isRealCurrent
@@ -152,10 +152,10 @@ export const ExpensesView: React.FC = () => {
         </div>
 
         {/* View togglers */}
-        <div className="flex items-center gap-2 border border-slate-200 p-1 rounded-2xl bg-slate-50/50">
+        <div className="flex items-center gap-2 border border-slate-200 p-1 rounded-full bg-slate-50/50">
           <button
             onClick={() => setViewMode('list')}
-            className={`flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all ${
+            className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${
               viewMode === 'list' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-400'
             }`}
           >
@@ -167,7 +167,7 @@ export const ExpensesView: React.FC = () => {
               setViewMode('calendar');
               setCurrentMonth(realCurrentMonth);
             }}
-            className={`flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all ${
+            className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${
               viewMode === 'calendar' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-400'
             }`}
           >
@@ -333,7 +333,7 @@ export const ExpensesView: React.FC = () => {
                 </div>
                 <button
                   onClick={() => setShowMobileFilters(!showMobileFilters)}
-                  className={`flex items-center gap-1.5 px-3 py-2.5 border rounded-2xl text-xs font-semibold transition-all ${
+                  className={`flex items-center gap-1.5 px-3 py-2.5 border rounded-full text-xs font-semibold transition-all ${
                     showMobileFilters || selectedType !== 'All' || selectedCategory !== 'All' || selectedMethod !== 'All'
                       ? 'border-blue-200 bg-blue-50 text-blue-600'
                       : 'border-slate-200 bg-white text-slate-600'

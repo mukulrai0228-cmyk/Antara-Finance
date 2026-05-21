@@ -43,6 +43,7 @@ interface FinanceContextType {
   payCreditCardBill: (cardId: string, amount: number, paymentMethod: PaymentMethodType) => Promise<void>;
   addVehicle: (v: Omit<Vehicle, 'id'>) => Promise<void>;
   deleteVehicle: (id: string) => Promise<void>;
+  updateVehicle: (id: string, updatedFields: Omit<Vehicle, 'id'>) => Promise<void>;
   addVehicleExpense: (ve: Omit<VehicleExpense, 'id'>) => Promise<void>;
   deleteVehicleExpense: (id: string) => Promise<void>;
   financialScore: number;
@@ -721,6 +722,27 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
   };
 
+  const updateVehicle = async (id: string, updatedFields: Omit<Vehicle, 'id'>) => {
+    try {
+      const { error } = await supabase
+        .from('vehicles')
+        .update({
+          type: updatedFields.type,
+          name: updatedFields.name,
+          registration_number: updatedFields.registrationNumber || null,
+        })
+        .eq('id', id);
+
+      if (error) throw error;
+
+      setVehicles((prev) =>
+        prev.map((v) => (v.id === id ? { ...v, ...updatedFields } : v))
+      );
+    } catch (err) {
+      console.error('Error updating vehicle:', err);
+    }
+  };
+
   const addVehicleExpense = async (ve: Omit<VehicleExpense, 'id'>) => {
     if (!authUserId) return;
 
@@ -895,6 +917,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
         payCreditCardBill,
         addVehicle,
         deleteVehicle,
+        updateVehicle,
         addVehicleExpense,
         deleteVehicleExpense,
         financialScore,

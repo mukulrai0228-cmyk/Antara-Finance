@@ -184,7 +184,7 @@ export const SettingsView: React.FC = () => {
 
           <button
             type="submit"
-            className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-sm"
+            className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-full text-xs font-bold transition-all shadow-sm"
           >
             Update Configuration
           </button>
@@ -213,7 +213,7 @@ export const SettingsView: React.FC = () => {
             </div>
             <button
               onClick={exportAllData}
-              className="px-4 py-2 bg-white border border-slate-200 hover:bg-slate-50 text-[10px] font-bold text-slate-750 rounded-xl transition-all"
+              className="px-4 py-2 bg-white border border-slate-200 hover:bg-slate-50 text-[10px] font-bold text-slate-750 rounded-full transition-all"
             >
               Export JSON File
             </button>

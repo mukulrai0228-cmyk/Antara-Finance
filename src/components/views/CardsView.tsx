@@ -107,7 +107,7 @@ export const CardsView: React.FC = () => {
 
         <button
           onClick={() => setIsAddCardOpen(true)}
-          className="flex items-center gap-1.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 px-3.5 py-2 rounded-xl text-xs font-bold transition-all shadow-sm"
+          className="flex items-center gap-1.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 px-3.5 py-2 rounded-full text-xs font-bold transition-all shadow-sm"
         >
           <Plus className="w-4 h-4 text-blue-600" />
           <span>Add Credit Card</span>
@@ -191,14 +191,14 @@ export const CardsView: React.FC = () => {
                     setPayCardId(card.id);
                     setPayAmount(String(card.currentDue));
                   }}
-                  className="w-full py-2.5 bg-slate-50 border border-slate-200 hover:bg-blue-550 hover:text-white rounded-2xl text-xs font-bold text-slate-700 transition-all"
+                  className="w-full py-2.5 bg-slate-50 border border-slate-200 hover:bg-blue-550 hover:text-white rounded-full text-xs font-bold text-slate-700 transition-all"
                 >
                   Pay Card Bill
                 </button>
               ) : (
                 <button
                   disabled
-                  className="w-full py-2.5 bg-slate-50 border border-transparent rounded-2xl text-xs font-bold text-slate-350 flex items-center justify-center gap-1.5"
+                  className="w-full py-2.5 bg-slate-50 border border-transparent rounded-full text-xs font-bold text-slate-350 flex items-center justify-center gap-1.5"
                 >
                   <ShieldCheck className="w-4 h-4 text-emerald-500" />
                   <span>Dues Cleared</span>
@@ -346,7 +346,7 @@ export const CardsView: React.FC = () => {
 
               <button
                 type="submit"
-                className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all mt-4"
+                className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-full text-xs font-bold transition-all mt-4"
               >
                 Save Credit Card
               </button>
@@ -410,7 +410,7 @@ export const CardsView: React.FC = () => {
 
               <button
                 type="submit"
-                className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all mt-4"
+                className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-full text-xs font-bold transition-all mt-4"
               >
                 Confirm Payment
               </button>

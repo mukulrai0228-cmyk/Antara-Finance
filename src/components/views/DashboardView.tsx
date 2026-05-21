@@ -70,8 +70,11 @@ export const DashboardView: React.FC = () => {
   const totalMonthlySpend = currentMonthTransactions
     .filter((t) => t.type === 'Spent')
     .reduce((sum, t) => sum + t.amount, 0);
+  const totalMonthlyReceived = currentMonthTransactions
+    .filter((t) => t.type === 'Received')
+    .reduce((sum, t) => sum + t.amount, 0);
 
-  const remainingSalary = monthlySalary - totalMonthlySpend;
+  const remainingSalary = monthlySalary + totalMonthlyReceived - totalMonthlySpend;
   const weeklySpend = totalMonthlySpend / 4.3; // Average weekly spend
 
   // Category Icon Map helper
@@ -225,15 +228,19 @@ export const DashboardView: React.FC = () => {
         <div className="bg-white border border-slate-200/80 rounded-2xl p-4 shadow-sm flex flex-col justify-between">
           <div className="flex justify-between items-center">
             <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">
-              Salary Credit
+              Total Budget
             </span>
             <Wallet className="w-4 h-4 text-slate-400" />
           </div>
           <div className="mt-2.5">
             <p className="text-md sm:text-lg font-bold text-slate-900">
-              ₹{monthlySalary.toLocaleString('en-IN')}
+              ₹{(monthlySalary + totalMonthlyReceived).toLocaleString('en-IN')}
             </p>
-            <span className="text-[9px] text-slate-400">Credited Day {user?.salaryCreditDate}</span>
+            <span className="text-[9px] text-slate-400 block truncate">
+              {totalMonthlyReceived > 0 
+                ? `Salary: ₹${monthlySalary.toLocaleString('en-IN')} + Extra: ₹${totalMonthlyReceived.toLocaleString('en-IN')}`
+                : `Salary credited Day ${user?.salaryCreditDate}`}
+            </span>
           </div>
         </div>
 

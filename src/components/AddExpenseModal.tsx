@@ -43,7 +43,7 @@ export const AddExpenseModal: React.FC<AddExpenseModalProps> = ({ isOpen, onClos
 
   // Form states
   const [amount, setAmount] = useState('');
-  const [type, setType] = useState<'Spent' | 'Give' | 'Borrowed'>('Spent');
+  const [type, setType] = useState<'Spent' | 'Give' | 'Borrowed' | 'Received'>('Spent');
   const [category, setCategory] = useState<TransactionCategory>('Food');
   const [selectedTags, setSelectedTags] = useState<TransactionTag[]>(['Family']);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethodType>('UPI');
@@ -139,9 +139,9 @@ export const AddExpenseModal: React.FC<AddExpenseModalProps> = ({ isOpen, onClos
       addTransaction({
         amount: amountVal,
         type,
-        category: type === 'Spent' ? category : (type === 'Give' ? 'Family' : 'Bills'),
-        tags: type === 'Spent' ? selectedTags : ['Need'],
-        paymentMethod: type === 'Spent' ? paymentMethod : 'UPI',
+        category: type === 'Spent' ? category : (type === 'Give' ? 'Family' : (type === 'Received' ? 'Personal' : 'Bills')),
+        tags: type === 'Spent' ? selectedTags : (type === 'Received' ? selectedTags : ['Need']),
+        paymentMethod: type === 'Spent' ? paymentMethod : (type === 'Received' ? paymentMethod : 'UPI'),
         notes: notes || undefined,
         date,
         personName: (type === 'Give' || type === 'Borrowed') ? personName : undefined,
@@ -184,7 +184,7 @@ export const AddExpenseModal: React.FC<AddExpenseModalProps> = ({ isOpen, onClos
           {/* Type Selection Tabs */}
           <div>
             <div className="flex bg-[#e5e7eb] p-1 rounded-full">
-              {(['Spent', 'Give', 'Borrowed'] as const).map((t, idx, arr) => {
+              {(['Spent', 'Give', 'Borrowed', 'Received'] as const).map((t, idx, arr) => {
                 const isActive = type === t;
                 const showSeparator = idx > 0 && !isActive && type !== arr[idx - 1];
 
@@ -196,13 +196,13 @@ export const AddExpenseModal: React.FC<AddExpenseModalProps> = ({ isOpen, onClos
                     <button
                       type="button"
                       onClick={() => setType(t)}
-                      className={`flex-1 py-3 text-sm font-semibold rounded-full transition-all ${
+                      className={`flex-1 py-3 text-xs sm:text-sm font-semibold rounded-full transition-all ${
                         isActive
                           ? 'bg-white text-slate-900 shadow-sm'
                           : 'text-slate-500 hover:text-slate-800'
                       }`}
                     >
-                      {t}
+                      {t === 'Received' ? 'Add Money' : t}
                     </button>
                   </React.Fragment>
                 );
@@ -393,7 +393,7 @@ export const AddExpenseModal: React.FC<AddExpenseModalProps> = ({ isOpen, onClos
                     required
                     value={date}
                     onChange={(e) => setDate(e.target.value)}
-                    className="w-full pl-12 pr-4 py-3 bg-[#f3f4f6] rounded-2xl text-slate-900 font-semibold text-base focus:outline-none focus:ring-0 border-0"
+                    className="w-full min-w-0 pl-12 pr-4 py-3 bg-[#f3f4f6] rounded-2xl text-slate-900 font-semibold text-base focus:outline-none focus:ring-0 border-0"
                   />
                 </div>
               </div>
@@ -414,7 +414,88 @@ export const AddExpenseModal: React.FC<AddExpenseModalProps> = ({ isOpen, onClos
             </div>
           )}
 
-          {/* GIVE SECTION */}
+            {/* RECEIVED SECTION */}
+            {type === 'Received' && (
+              <div className="space-y-5 animate-fade-in">
+                {/* Received Method */}
+                <div>
+                  <label className="block text-sm font-semibold text-slate-500 mb-2">
+                    Payment Method (Received In)
+                  </label>
+                  <div className="relative">
+                    <select
+                      value={paymentMethod}
+                      onChange={(e) => setPaymentMethod(e.target.value as PaymentMethodType)}
+                      className="w-full px-4 py-3 bg-[#f3f4f6] rounded-2xl text-slate-900 font-semibold text-base appearance-none focus:outline-none focus:ring-0 border-0"
+                    >
+                      <option value="UPI">UPI (GPay/PhonePe)</option>
+                      <option value="Cash">Cash</option>
+                      <option value="Debit Card">Debit Card</option>
+                      <option value="Credit Card">Credit Card</option>
+                    </select>
+                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-4 text-slate-500">
+                      <ChevronDown className="w-5 h-5 stroke-[1.5]" />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Tags Dropdown */}
+                <div>
+                  <label className="block text-sm font-semibold text-slate-500 mb-2">
+                    Tags
+                  </label>
+                  <div className="relative">
+                    <select
+                      value={selectedTags[0] || 'Future Saving'}
+                      onChange={(e) => setSelectedTags([e.target.value as TransactionTag])}
+                      className="w-full px-4 py-3 bg-[#f3f4f6] rounded-2xl text-slate-900 font-semibold text-base appearance-none focus:outline-none focus:ring-0 border-0"
+                    >
+                      {TAGS.map((tag) => (
+                        <option key={tag} value={tag}>
+                          {tag}
+                        </option>
+                      ))}
+                    </select>
+                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-4 text-slate-500">
+                      <ChevronDown className="w-5 h-5 stroke-[1.5]" />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Date Input */}
+                <div>
+                  <label className="block text-sm font-semibold text-slate-500 mb-2">
+                    Date
+                  </label>
+                  <div className="relative">
+                    <CalIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-800" />
+                    <input
+                      type="date"
+                      required
+                      value={date}
+                      onChange={(e) => setDate(e.target.value)}
+                      className="w-full min-w-0 pl-12 pr-4 py-3 bg-[#f3f4f6] rounded-2xl text-slate-900 font-semibold text-base focus:outline-none focus:ring-0 border-0"
+                    />
+                  </div>
+                </div>
+
+                {/* Remark/Notes Input */}
+                <div>
+                  <label className="block text-sm font-semibold text-slate-500 mb-2">
+                    Remark / Source
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g, Freelancing, Gift, Salary Bonus"
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
+                    className="w-full px-4 py-3 bg-[#f3f4f6] rounded-2xl text-slate-900 font-semibold text-base focus:outline-none focus:ring-0 border-0"
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* GIVE SECTION */}
           {type === 'Give' && (
             <div className="space-y-5 animate-fade-in">
               {/* Lent to Dropdown */}
@@ -444,7 +525,7 @@ export const AddExpenseModal: React.FC<AddExpenseModalProps> = ({ isOpen, onClos
               </div>
 
               {/* Date & Return Date Side-by-Side Grid */}
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-semibold text-slate-500 mb-2">
                     Date
@@ -456,7 +537,7 @@ export const AddExpenseModal: React.FC<AddExpenseModalProps> = ({ isOpen, onClos
                       required
                       value={date}
                       onChange={(e) => setDate(e.target.value)}
-                      className="w-full pl-12 pr-4 py-3 bg-[#f3f4f6] rounded-2xl text-slate-900 font-semibold text-base focus:outline-none focus:ring-0 border-0"
+                      className="w-full min-w-0 pl-12 pr-4 py-3 bg-[#f3f4f6] rounded-2xl text-slate-900 font-semibold text-base focus:outline-none focus:ring-0 border-0"
                     />
                   </div>
                 </div>
@@ -472,7 +553,7 @@ export const AddExpenseModal: React.FC<AddExpenseModalProps> = ({ isOpen, onClos
                       required
                       value={expectedReturnDate}
                       onChange={(e) => setExpectedReturnDate(e.target.value)}
-                      className="w-full pl-12 pr-4 py-3 bg-[#f3f4f6] rounded-2xl text-slate-900 font-semibold text-base focus:outline-none focus:ring-0 border-0"
+                      className="w-full min-w-0 pl-12 pr-4 py-3 bg-[#f3f4f6] rounded-2xl text-slate-900 font-semibold text-base focus:outline-none focus:ring-0 border-0"
                     />
                   </div>
                 </div>
@@ -524,7 +605,7 @@ export const AddExpenseModal: React.FC<AddExpenseModalProps> = ({ isOpen, onClos
               </div>
 
               {/* Date & Return Date Side-by-Side Grid */}
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-semibold text-slate-500 mb-2">
                     Date
@@ -536,7 +617,7 @@ export const AddExpenseModal: React.FC<AddExpenseModalProps> = ({ isOpen, onClos
                       required
                       value={date}
                       onChange={(e) => setDate(e.target.value)}
-                      className="w-full pl-12 pr-4 py-3 bg-[#f3f4f6] rounded-2xl text-slate-900 font-semibold text-base focus:outline-none focus:ring-0 border-0"
+                      className="w-full min-w-0 pl-12 pr-4 py-3 bg-[#f3f4f6] rounded-2xl text-slate-900 font-semibold text-base focus:outline-none focus:ring-0 border-0"
                     />
                   </div>
                 </div>
@@ -552,7 +633,7 @@ export const AddExpenseModal: React.FC<AddExpenseModalProps> = ({ isOpen, onClos
                       required
                       value={expectedReturnDate}
                       onChange={(e) => setExpectedReturnDate(e.target.value)}
-                      className="w-full pl-12 pr-4 py-3 bg-[#f3f4f6] rounded-2xl text-slate-900 font-semibold text-base focus:outline-none focus:ring-0 border-0"
+                      className="w-full min-w-0 pl-12 pr-4 py-3 bg-[#f3f4f6] rounded-2xl text-slate-900 font-semibold text-base focus:outline-none focus:ring-0 border-0"
                     />
                   </div>
                 </div>

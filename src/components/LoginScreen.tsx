@@ -65,7 +65,7 @@ export const LoginScreen: React.FC = () => {
             <button
               onClick={handleGoogleLogin}
               disabled={loading}
-              className="w-full flex items-center justify-center gap-3 px-4 py-3 border border-slate-200 rounded-2xl bg-white hover:bg-slate-50 text-slate-700 font-medium text-sm transition-all shadow-sm hover:shadow-md disabled:opacity-50"
+              className="w-full flex items-center justify-center gap-3 px-4 py-3 border border-slate-200 rounded-full bg-white hover:bg-slate-50 text-slate-700 font-medium text-sm transition-all shadow-sm hover:shadow-md disabled:opacity-50"
             >
               {loading ? (
                 <div className="w-5 h-5 border-2 border-slate-300 border-t-blue-600 rounded-full animate-spin" />

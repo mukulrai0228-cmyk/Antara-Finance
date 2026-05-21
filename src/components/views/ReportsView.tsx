@@ -53,7 +53,11 @@ export const ReportsView: React.FC = () => {
     .filter((t) => t.type === 'Spent')
     .reduce((sum, t) => sum + t.amount, 0);
 
-  const monthlySavings = Math.max(0, monthlySalary - monthlySpent);
+  const monthlyReceived = currentMonthTransactions
+    .filter((t) => t.type === 'Received')
+    .reduce((sum, t) => sum + t.amount, 0);
+
+  const monthlySavings = Math.max(0, monthlySalary + monthlyReceived - monthlySpent);
   
   // Projected yearly savings: sum of actual recorded savings + projection for remaining months
   const yearlySavings = monthlySavings * 12;
@@ -146,14 +150,14 @@ export const ReportsView: React.FC = () => {
         <div className="flex gap-2.5">
           <button
             onClick={exportCSV}
-            className="flex items-center gap-1.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 px-3.5 py-2 rounded-xl text-xs font-bold transition-all shadow-sm"
+            className="flex items-center gap-1.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 px-3.5 py-2 rounded-full text-xs font-bold transition-all shadow-sm"
           >
             <FileSpreadsheet className="w-4 h-4 text-blue-600" />
             <span>Export CSV</span>
           </button>
           <button
             onClick={exportPDF}
-            className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white px-3.5 py-2 rounded-xl text-xs font-bold transition-all shadow-sm"
+            className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white px-3.5 py-2 rounded-full text-xs font-bold transition-all shadow-sm"
           >
             <FileText className="w-4 h-4" />
             <span>Export PDF</span>
@@ -172,7 +176,7 @@ export const ReportsView: React.FC = () => {
           <p className="text-md sm:text-lg font-bold text-slate-805 mt-2">
             ₹{monthlySavings.toLocaleString('en-IN')}
           </p>
-          <span className="text-[9px] text-slate-400">Savings ratio: {monthlySalary > 0 ? Math.round((monthlySavings / monthlySalary) * 100) : 0}%</span>
+          <span className="text-[9px] text-slate-400">Savings ratio: {monthlySalary + monthlyReceived > 0 ? Math.round((monthlySavings / (monthlySalary + monthlyReceived)) * 100) : 0}%</span>
         </div>
 
         <div className="bg-white border border-slate-200/80 rounded-2xl p-4 shadow-sm">

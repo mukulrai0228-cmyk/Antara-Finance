@@ -410,29 +410,16 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
         return;
       }
 
-      // If it's a first time onboarding, seed database collections
-      // 2. Initialize Seed People
-      const seededPeople = [
-        { name: 'Rohan Sharma', phone: '9876543210', user_id: authUserId },
-        { name: 'Sneha Patel', phone: '9123456789', user_id: authUserId },
-        { name: 'Amit Verma', phone: '9345678901', user_id: authUserId },
-      ];
-      const { data: peopleData, error: peopleError } = await supabase
-        .from('people')
-        .insert(seededPeople)
-        .select();
-
-      if (peopleError) console.error('Error seeding contacts:', peopleError);
-
-      // 3. Initialize Cards
+      // If it's a first time onboarding, initialize user configurations
+      // 2. Initialize Cards
       const cardsToInsert = initialCards.map((card) => ({
         user_id: authUserId,
         card_name: card.cardName,
         bank_name: card.bankName,
         due_date: card.dueDate,
         credit_limit: card.creditLimit,
-        current_due: Math.round(card.creditLimit * 0.15),
-        status: 'Pending',
+        current_due: 0,
+        status: 'Paid',
       }));
       const { data: cardsData, error: cardsError } = await supabase
         .from('credit_cards')
@@ -441,7 +428,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
       if (cardsError) console.error('Error seeding credit cards:', cardsError);
 
-      // 4. Initialize Vehicles
+      // 3. Initialize Vehicles
       const vehiclesToInsert = initialVehicles.map((veh) => ({
         user_id: authUserId,
         type: veh.type,
@@ -455,187 +442,16 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
       if (vehiclesError) console.error('Error seeding vehicles:', vehiclesError);
 
-      const dbPeople = peopleData || [];
       const dbCards = cardsData || [];
       const dbVehicles = vehiclesData || [];
 
-      // 5. Seed Transactions & Vehicle Expenses
-      const seededTransactions: any[] = [];
-      const today = new Date();
-      const curYear = today.getFullYear();
-      const curMonth = String(today.getMonth() + 1).padStart(2, '0');
-
-      // Salary credit
-      seededTransactions.push({
-        user_id: authUserId,
-        amount: profile.monthlySalary,
-        type: 'Received',
-        category: 'Personal',
-        tags: ['Future Saving'],
-        payment_method: profile.mainPaymentMethod,
-        notes: `${profile.companyName} Salary Credit`,
-        date: `${curYear}-${curMonth}-${String(profile.salaryCreditDate).padStart(2, '0')}`,
-      });
-
-      // Debts (Borrowed/Give)
-      seededTransactions.push({
-        user_id: authUserId,
-        amount: 2500,
-        type: 'Give',
-        category: 'Food',
-        tags: ['Lifestyle'],
-        payment_method: 'UPI',
-        notes: 'Dinner split at Social',
-        date: `${curYear}-${curMonth}-14`,
-        person_name: 'Sneha Patel',
-        expected_return_date: `${curYear}-${curMonth}-28`,
-        is_settled: false,
-      });
-
-      seededTransactions.push({
-        user_id: authUserId,
-        amount: 5000,
-        type: 'Borrowed',
-        category: 'Bills',
-        tags: ['Need'],
-        payment_method: 'UPI',
-        notes: 'Rent contribution advance',
-        date: `${curYear}-${curMonth}-03`,
-        person_name: 'Rohan Sharma',
-        expected_return_date: `${curYear}-${curMonth}-18`,
-        is_settled: false,
-      });
-
-      seededTransactions.push({
-        user_id: authUserId,
-        amount: 1200,
-        type: 'Give',
-        category: 'Entertainment',
-        tags: ['Lifestyle'],
-        payment_method: 'UPI',
-        notes: 'Movie tickets',
-        date: `${curYear}-${curMonth}-01`,
-        person_name: 'Amit Verma',
-        expected_return_date: `${curYear}-${curMonth}-05`,
-        is_settled: true,
-      });
-
-      // Spends
-      seededTransactions.push({
-        user_id: authUserId,
-        amount: 1450,
-        type: 'Spent',
-        category: 'Food',
-        tags: ['Want', 'Lifestyle'],
-        payment_method: 'UPI',
-        notes: 'Swiggy Dinner Order',
-        date: `${curYear}-${curMonth}-05`,
-      });
-
-      seededTransactions.push({
-        user_id: authUserId,
-        amount: 850,
-        type: 'Spent',
-        category: 'Food',
-        tags: ['Need'],
-        payment_method: 'Cash',
-        notes: 'Weekly Groceries',
-        date: `${curYear}-${curMonth}-12`,
-      });
-
-      // Shopping via Card
-      const firstCardId = dbCards.length > 0 ? dbCards[0].id : null;
-      seededTransactions.push({
-        user_id: authUserId,
-        amount: 4200,
-        type: 'Spent',
-        category: 'Shopping',
-        tags: ['Want', 'Lifestyle'],
-        payment_method: firstCardId ? 'Credit Card' : 'UPI',
-        card_id: firstCardId,
-        notes: 'Myntra Apparel',
-        date: `${curYear}-${curMonth}-08`,
-      });
-
-      seededTransactions.push({
-        user_id: authUserId,
-        amount: 12000,
-        type: 'Spent',
-        category: 'EMI',
-        tags: ['Need'],
-        payment_method: 'Debit Card',
-        notes: 'Car Loan EMI',
-        date: `${curYear}-${curMonth}-02`,
-      });
-
-      // Vehicle Fuel Logs
-      const vehicleExpensesToInsert: any[] = [];
-      if (dbVehicles.length > 0) {
-        dbVehicles.forEach((vehicle) => {
-          const fuelAmount = vehicle.type === 'Car' ? 3500 : 800;
-          seededTransactions.push({
-            user_id: authUserId,
-            amount: fuelAmount,
-            type: 'Spent',
-            category: 'Petrol',
-            tags: ['Need'],
-            payment_method: 'UPI',
-            notes: `HP Petrol Refuel - ${vehicle.name}`,
-            date: `${curYear}-${curMonth}-10`,
-            vehicle_id: vehicle.id,
-          });
-
-          vehicleExpensesToInsert.push({
-            user_id: authUserId,
-            vehicle_id: vehicle.id,
-            type: 'Petrol',
-            amount: fuelAmount,
-            date: `${curYear}-${curMonth}-10`,
-            notes: 'HP Petrol Pump',
-            mileage: vehicle.type === 'Car' ? 12450 : 4520,
-          });
-
-          const serviceAmount = vehicle.type === 'Car' ? 4500 : 1200;
-          seededTransactions.push({
-            user_id: authUserId,
-            amount: serviceAmount,
-            type: 'Spent',
-            category: 'Petrol',
-            tags: ['Need'],
-            payment_method: 'Debit Card',
-            notes: `Routine Service - ${vehicle.name}`,
-            date: `${curYear}-${curMonth}-04`,
-            vehicle_id: vehicle.id,
-          });
-
-          vehicleExpensesToInsert.push({
-            user_id: authUserId,
-            vehicle_id: vehicle.id,
-            type: 'Service',
-            amount: serviceAmount,
-            date: `${curYear}-${curMonth}-04`,
-            notes: 'Authorized Service Center',
-          });
-        });
-      }
-
-      const [txsRes, vExpensesRes] = await Promise.all([
-        supabase.from('transactions').insert(seededTransactions).select(),
-        vehicleExpensesToInsert.length > 0
-          ? supabase.from('vehicle_expenses').insert(vehicleExpensesToInsert).select()
-          : Promise.resolve({ data: [], error: null }),
-      ]);
-
-      if (txsRes.error) console.error('Error inserting seeded transactions:', txsRes.error);
-      if (vExpensesRes.error) console.error('Error inserting seeded vehicle expenses:', vExpensesRes.error);
-
-      // Commit State updates
+      // Commit State updates (starting completely empty for transactional registers)
       setUser(mapProfileFromDB(profileData, user?.email));
-      setPeople(dbPeople.map(mapPersonFromDB));
+      setPeople([]);
       setCards(dbCards.map(mapCreditCardFromDB));
       setVehicles(dbVehicles.map(mapVehicleFromDB));
-      setTransactions((txsRes.data || []).map(mapTransactionFromDB));
-      setVehicleExpenses((vExpensesRes.data || []).map(mapVehicleExpenseFromDB));
+      setTransactions([]);
+      setVehicleExpenses([]);
       setCardHistory([]);
 
     } catch (err) {

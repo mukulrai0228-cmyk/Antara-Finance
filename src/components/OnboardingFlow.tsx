@@ -30,9 +30,7 @@ export const OnboardingFlow: React.FC = () => {
   const [mainPaymentMethod, setMainPaymentMethod] = useState<PaymentMethodType>('UPI');
 
   // Cards
-  const [cardsList, setCardsList] = useState<{ cardName: string; bankName: string; creditLimit: number; dueDate: number }[]>([
-    { cardName: 'Millennia', bankName: 'HDFC Bank', creditLimit: 150000, dueDate: 15 },
-  ]);
+  const [cardsList, setCardsList] = useState<{ cardName: string; bankName: string; creditLimit: number; dueDate: number }[]>([]);
   const [newCardName, setNewCardName] = useState('');
   const [newCardBank, setNewCardBank] = useState('');
   const [newCardLimit, setNewCardLimit] = useState('');
@@ -448,8 +446,8 @@ export const OnboardingFlow: React.FC = () => {
                 <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">
                   Financial Score
                 </span>
-                <p className="text-md font-bold text-emerald-600 mt-1">82/100</p>
-                <span className="text-[9px] text-emerald-500 font-semibold">Good Starting</span>
+                <p className="text-md font-bold text-emerald-600 mt-1">100/100</p>
+                <span className="text-[9px] text-emerald-500 font-semibold">Clean Slate</span>
               </div>
 
               <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 text-center">
@@ -467,8 +465,7 @@ export const OnboardingFlow: React.FC = () => {
               <strong>💡 Companion Insight:</strong> Since your salary is credited on Day{' '}
               {salaryCreditDate}, we have set your monthly budget cycle to start then. Your
               highest safety limit is set to {cardsList.length} credit card
-              {cardsList.length > 1 ? 's' : ''}. We seeded a few mock items so your graphs are fully
-              visible right away!
+              {cardsList.length > 1 ? 's' : ''}. Your companion is ready to track your actual transactions!
             </div>
           </div>
         )}

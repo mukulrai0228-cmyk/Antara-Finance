@@ -27,7 +27,6 @@ export const SettingsView: React.FC = () => {
     vehicleExpenses,
     cardHistory,
     completeOnboarding,
-    resetAllData,
   } = useFinance();
 
   // Profile forms
@@ -258,10 +257,10 @@ export const SettingsView: React.FC = () => {
 
       </div>
 
-      {/* Backup and resetting utilities */}
+      {/* Backup utilities */}
       <div className="bg-white border border-slate-200/80 rounded-3xl p-5 shadow-sm space-y-4">
-        <h3 className="text-sm font-bold text-red-700 uppercase tracking-wide">
-          Danger Zone & Backups
+        <h3 className="text-sm font-bold text-slate-700 uppercase tracking-wide">
+          Backups
         </h3>
         
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -281,28 +280,6 @@ export const SettingsView: React.FC = () => {
               className="px-4 py-2 bg-white border border-slate-200 hover:bg-slate-50 text-[10px] font-bold text-slate-750 rounded-xl transition-all"
             >
               Export JSON File
-            </button>
-          </div>
-
-          <div className="p-4 bg-slate-50 rounded-2xl border border-slate-150 flex flex-col justify-between items-start space-y-3">
-            <div>
-              <h4 className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
-                <RotateCcw className="w-4 h-4 text-red-500" />
-                <span>Reset All Application Data</span>
-              </h4>
-              <p className="text-[10px] text-slate-450 mt-1">
-                Deletes all local storage values and user configurations. This is irreversible.
-              </p>
-            </div>
-            <button
-              onClick={() => {
-                if (confirm('Are you absolutely sure you want to reset all data? This deletes your local storage.')) {
-                  resetAllData();
-                }
-              }}
-              className="px-4 py-2 bg-red-50 hover:bg-red-100 border border-red-200 text-[10px] font-bold text-red-650 rounded-xl transition-all"
-            >
-              Reset Data Store
             </button>
           </div>
 

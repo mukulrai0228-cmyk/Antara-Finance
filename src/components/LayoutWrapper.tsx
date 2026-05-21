@@ -304,13 +304,69 @@ export const LayoutWrapper: React.FC<LayoutWrapperProps> = ({ activeTab, setActi
         </header>
 
         {/* Inner Content Area */}
-        <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto">
+        <main className="flex-1 overflow-y-auto p-4 pb-24 sm:p-6 sm:pb-24 lg:p-8 lg:pb-8 max-w-7xl w-full mx-auto">
           {children}
         </main>
       </div>
 
       {/* Quick Add Expense Modal Dialog */}
       <AddExpenseModal isOpen={isAddModalOpen} onClose={() => setIsAddModalOpen(false)} />
+
+      {/* Mobile Bottom Navigation Bar */}
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-slate-200/80 px-4 py-2 flex items-center justify-between z-40 pb-safe shadow-lg">
+        {/* Tab 1: Dashboard */}
+        <button
+          onClick={() => setActiveTab('dashboard')}
+          className={`flex flex-col items-center gap-1 flex-1 py-1.5 transition-all ${
+            activeTab === 'dashboard' ? 'text-blue-600 font-bold' : 'text-slate-450 hover:text-slate-650'
+          }`}
+        >
+          <LayoutDashboard className="w-5 h-5" />
+          <span className="text-[10px] tracking-tight">Home</span>
+        </button>
+
+        {/* Tab 2: Expenses */}
+        <button
+          onClick={() => setActiveTab('expenses')}
+          className={`flex flex-col items-center gap-1 flex-1 py-1.5 transition-all ${
+            activeTab === 'expenses' ? 'text-blue-600 font-bold' : 'text-slate-450 hover:text-slate-650'
+          }`}
+        >
+          <CalendarRange className="w-5 h-5" />
+          <span className="text-[10px] tracking-tight">Expenses</span>
+        </button>
+
+        {/* Tab 3: Quick Add Button */}
+        <div className="flex-1 flex justify-center -mt-6 relative z-50">
+          <button
+            onClick={() => setIsAddModalOpen(true)}
+            className="w-12 h-12 rounded-full bg-blue-600 hover:bg-blue-700 text-white flex items-center justify-center shadow-lg shadow-blue-500/30 transform hover:scale-105 active:scale-95 transition-all"
+            title="Add Expense"
+          >
+            <Plus className="w-6 h-6" />
+          </button>
+        </div>
+
+        {/* Tab 4: Cards */}
+        <button
+          onClick={() => setActiveTab('cards')}
+          className={`flex flex-col items-center gap-1 flex-1 py-1.5 transition-all ${
+            activeTab === 'cards' ? 'text-blue-600 font-bold' : 'text-slate-450 hover:text-slate-655'
+          }`}
+        >
+          <CreditCard className="w-5 h-5" />
+          <span className="text-[10px] tracking-tight">Cards</span>
+        </button>
+
+        {/* Tab 5: Menu/More */}
+        <button
+          onClick={() => setIsSidebarOpen(true)}
+          className="flex flex-col items-center gap-1 flex-1 py-1.5 text-slate-450 hover:text-slate-650 transition-all"
+        >
+          <Menu className="w-5 h-5" />
+          <span className="text-[10px] tracking-tight">More</span>
+        </button>
+      </div>
     </div>
   );
 };

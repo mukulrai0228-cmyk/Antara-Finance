@@ -125,7 +125,7 @@ export const ExpensesView: React.FC = () => {
         </div>
 
         {/* Month Selector Carousel (Desktop/Tablet) */}
-        <div className="hidden sm:flex gap-1 overflow-x-auto pb-1 sm:pb-0 scrollbar-none max-w-full sm:max-w-md">
+        <div className="hidden sm:flex gap-1 overflow-x-auto pb-1 sm:pb-0 scrollbar-none max-w-full sm:max-w-2xl">
           {MONTHS.map((m) => {
             const isSel = currentMonth === m;
             return (

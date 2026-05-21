@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { useFinance } from '../../context/FinanceContext';
 import { AddExpenseModal } from '../AddExpenseModal';
+import { DeleteConfirmationModal } from '../DeleteConfirmationModal';
 import {
   Calendar as CalIcon,
   List,
@@ -35,6 +36,8 @@ export const ExpensesView: React.FC = () => {
   const [viewMode, setViewMode] = useState<'calendar' | 'list'>('list');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [prefilledDate, setPrefilledDate] = useState<string | undefined>(undefined);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [txToDelete, setTxToDelete] = useState<string | null>(null);
 
   // Search & Filter state
   const [searchTerm, setSearchTerm] = useState('');
@@ -486,7 +489,10 @@ export const ExpensesView: React.FC = () => {
                       {/* Delete Action */}
                       <td className="p-4 pr-6 text-center">
                         <button
-                          onClick={() => deleteTransaction(tx.id)}
+                          onClick={() => {
+                            setTxToDelete(tx.id);
+                            setDeleteConfirmOpen(true);
+                          }}
                           className="p-1.5 text-slate-400 hover:text-red-655 rounded-lg hover:bg-red-50/55 transition-all"
                           title="Delete Transaction"
                         >
@@ -566,8 +572,11 @@ export const ExpensesView: React.FC = () => {
                   </span>
                   
                   <button
-                    onClick={() => deleteTransaction(tx.id)}
-                    className="p-1.5 text-slate-400 hover:text-red-650 rounded-lg hover:bg-red-50/50 transition-all mt-auto"
+                    onClick={() => {
+                      setTxToDelete(tx.id);
+                      setDeleteConfirmOpen(true);
+                    }}
+                    className="p-1.5 text-slate-400 hover:text-red-655 rounded-lg hover:bg-red-50/55 transition-all"
                     title="Delete Transaction"
                   >
                     <Trash2 className="w-4 h-4" />
@@ -593,6 +602,22 @@ export const ExpensesView: React.FC = () => {
           setPrefilledDate(undefined);
         }}
         prefilledDate={prefilledDate}
+      />
+
+      {/* Delete confirmation modal */}
+      <DeleteConfirmationModal
+        isOpen={deleteConfirmOpen}
+        onClose={() => {
+          setDeleteConfirmOpen(false);
+          setTxToDelete(null);
+        }}
+        onConfirm={async () => {
+          if (txToDelete) {
+            await deleteTransaction(txToDelete);
+          }
+        }}
+        title="Delete this Expense"
+        message="Are you sure you want to delete this ?"
       />
     </div>
   );

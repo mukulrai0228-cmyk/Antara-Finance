@@ -22,6 +22,7 @@ import {
   Calendar as CalIcon,
 } from 'lucide-react';
 import { VehicleType, VehicleExpenseType, Vehicle } from '../../types';
+import { DeleteConfirmationModal } from '../DeleteConfirmationModal';
 
 export const VehiclesView: React.FC = () => {
   const { 
@@ -38,6 +39,12 @@ export const VehiclesView: React.FC = () => {
   const [vehName, setVehName] = useState('');
   const [vehType, setVehType] = useState<VehicleType>('Car');
   const [regNum, setRegNum] = useState('');
+
+  // Delete Confirmation State
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [deleteType, setDeleteType] = useState<'vehicle' | 'expense' | null>(null);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [deleteName, setDeleteName] = useState<string>('');
 
   const [isLogExpenseOpen, setIsLogExpenseOpen] = useState(false);
   const [selectedVehId, setSelectedVehId] = useState('');
@@ -250,7 +257,12 @@ export const VehiclesView: React.FC = () => {
                       <Edit2 className="w-4 h-4" />
                     </button>
                     <button
-                      onClick={() => deleteVehicle(veh.id)}
+                      onClick={() => {
+                        setDeleteType('vehicle');
+                        setDeleteId(veh.id);
+                        setDeleteName(veh.name);
+                        setDeleteConfirmOpen(true);
+                      }}
                       className="p-1.5 hover:bg-red-50 text-slate-400 hover:text-red-500 rounded-xl transition-all"
                       title="Remove Vehicle"
                     >
@@ -327,7 +339,13 @@ export const VehiclesView: React.FC = () => {
                       </p>
                     </div>
                     <button
-                      onClick={() => deleteVehicleExpense(ve.id)}
+                      onClick={() => {
+                        setDeleteType('expense');
+                        setDeleteId(ve.id);
+                        const vehicleObj = vehicles.find((v) => v.id === ve.vehicleId);
+                        setDeleteName(`${ve.type} - ${vehicleObj?.name || 'Vehicle'}`);
+                        setDeleteConfirmOpen(true);
+                      }}
                       className="p-1 hover:bg-red-50 text-slate-400 hover:text-red-500 rounded-lg opacity-0 group-hover:opacity-100 transition-all"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
@@ -668,6 +686,25 @@ export const VehiclesView: React.FC = () => {
         </div>
       )}
 
+      {/* Delete confirmation modal */}
+      <DeleteConfirmationModal
+        isOpen={deleteConfirmOpen}
+        onClose={() => {
+          setDeleteConfirmOpen(false);
+          setDeleteId(null);
+          setDeleteType(null);
+        }}
+        onConfirm={async () => {
+          if (!deleteId || !deleteType) return;
+          if (deleteType === 'vehicle') {
+            await deleteVehicle(deleteId);
+          } else {
+            await deleteVehicleExpense(deleteId);
+          }
+        }}
+        title={deleteType === 'vehicle' ? `Delete ${deleteName}` : 'Delete this Expense'}
+        message={deleteType === 'vehicle' ? `Are you sure you want to delete ${deleteName} ?` : 'Are you sure you want to delete this ?'}
+      />
     </div>
   );
 };

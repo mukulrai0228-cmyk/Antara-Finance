@@ -19,6 +19,7 @@ import {
   Info,
 } from 'lucide-react';
 import { Person, Transaction } from '../../types';
+import { DeleteConfirmationModal } from '../DeleteConfirmationModal';
 
 export const PeopleView: React.FC = () => {
   const {
@@ -41,6 +42,10 @@ export const PeopleView: React.FC = () => {
 
   // Selected person for modal details
   const [selectedPerson, setSelectedPerson] = useState<Person | null>(null);
+
+  // Delete Confirmation State
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [personToDelete, setPersonToDelete] = useState<{ id: string, name: string } | null>(null);
 
   // Helper: calculate balance for a specific person
   const getPersonBalance = (name: string) => {
@@ -654,12 +659,10 @@ export const PeopleView: React.FC = () => {
             <div className="pt-4 border-t border-slate-100 mt-6 flex justify-between items-center">
               <button
                 onClick={() => {
-                  if (window.confirm(`Are you sure you want to delete ${selectedPerson.name} from your contact directory?`)) {
-                    deletePerson(selectedPerson.id);
-                    setSelectedPerson(null);
-                  }
+                  setPersonToDelete({ id: selectedPerson.id, name: selectedPerson.name });
+                  setDeleteConfirmOpen(true);
                 }}
-                className="p-2 border border-red-100 hover:bg-red-50 text-red-500 rounded-full transition-all"
+                className="p-2 border border-red-100 hover:bg-red-50 text-red-500 rounded-full transition-all cursor-pointer"
                 title="Delete Contact"
               >
                 <Trash2 className="w-4 h-4" />
@@ -677,6 +680,22 @@ export const PeopleView: React.FC = () => {
         </div>
       )}
 
+      {/* Delete confirmation modal */}
+      <DeleteConfirmationModal
+        isOpen={deleteConfirmOpen}
+        onClose={() => {
+          setDeleteConfirmOpen(false);
+          setPersonToDelete(null);
+        }}
+        onConfirm={async () => {
+          if (personToDelete) {
+            await deletePerson(personToDelete.id);
+            setSelectedPerson(null);
+          }
+        }}
+        title={`Delete ${personToDelete?.name || 'Contact'}`}
+        message="Are you sure you want to delete this ?"
+      />
     </div>
   );
 };

@@ -37,7 +37,7 @@ interface FinanceContextType {
     initialCards: Omit<CreditCard, 'id' | 'currentDue' | 'status'>[],
     initialVehicles: Omit<Vehicle, 'id'>[]
   ) => Promise<void>;
-  addTransaction: (t: Omit<Transaction, 'id'>) => Promise<void>;
+  addTransaction: (t: Omit<Transaction, 'id'>, skipVehicleExpenseLog?: boolean) => Promise<void>;
   deleteTransaction: (id: string) => Promise<void>;
   addCreditCard: (c: Omit<CreditCard, 'id' | 'currentDue' | 'status'>) => Promise<void>;
   payCreditCardBill: (cardId: string, amount: number, paymentMethod: PaymentMethodType) => Promise<void>;
@@ -462,7 +462,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
   };
 
-  const addTransaction = async (t: Omit<Transaction, 'id'>) => {
+  const addTransaction = async (t: Omit<Transaction, 'id'>, skipVehicleExpenseLog?: boolean) => {
     if (!authUserId) return;
 
     try {
@@ -517,7 +517,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
       }
 
       // 3. If mapped to vehicle, create vehicle expense log
-      if (t.vehicleId) {
+      if (t.vehicleId && !skipVehicleExpenseLog) {
         let vType: VehicleExpenseType = 'Petrol';
         if (t.category === 'Petrol') vType = 'Petrol';
         else if (t.category === 'Bills') vType = 'Service';
@@ -580,6 +580,25 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
               prev.map((c) => (c.id === tx.cardId ? { ...c, currentDue: newDue } : c))
             );
           }
+        }
+      }
+
+      // Cascade delete matching vehicle expense if vehicleId is present
+      if (tx.vehicleId) {
+        const matchingVe = vehicleExpenses.find(
+          (ve) =>
+            ve.vehicleId === tx.vehicleId &&
+            ve.amount === tx.amount &&
+            ve.date === tx.date
+        );
+        if (matchingVe) {
+          const { error: veError } = await supabase
+            .from('vehicle_expenses')
+            .delete()
+            .eq('id', matchingVe.id);
+
+          if (veError) console.error('Error cascade deleting vehicle expense:', veError);
+          setVehicleExpenses((prev) => prev.filter((ve) => ve.id !== matchingVe.id));
         }
       }
 
@@ -788,7 +807,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
         notes: `${ve.type} for ${vehicleName} - ${ve.notes || ''}`,
         date: ve.date,
         vehicleId: ve.vehicleId,
-      });
+      }, true);
 
     } catch (err) {
       console.error('Error adding vehicle expense:', err);
@@ -796,6 +815,9 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
   };
 
   const deleteVehicleExpense = async (id: string) => {
+    const ve = vehicleExpenses.find((e) => e.id === id);
+    if (!ve) return;
+
     try {
       const { error } = await supabase
         .from('vehicle_expenses')
@@ -803,7 +825,19 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
         .eq('id', id);
 
       if (error) throw error;
-      setVehicleExpenses((prev) => prev.filter((ve) => ve.id !== id));
+      setVehicleExpenses((prev) => prev.filter((e) => e.id !== id));
+
+      // Cascade delete to matching transaction
+      const matchingTx = transactions.find(
+        (t) =>
+          t.vehicleId === ve.vehicleId &&
+          t.amount === ve.amount &&
+          t.date === ve.date
+      );
+
+      if (matchingTx) {
+        await deleteTransaction(matchingTx.id);
+      }
     } catch (err) {
       console.error('Error deleting vehicle expense:', err);
     }

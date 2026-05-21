@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useFinance } from '../../context/FinanceContext';
 import {
   Car,
@@ -17,6 +17,9 @@ import {
   Gauge,
   Sparkles,
   AlertCircle,
+  X,
+  ChevronDown,
+  Calendar as CalIcon,
 } from 'lucide-react';
 import { VehicleType, VehicleExpenseType, Vehicle } from '../../types';
 
@@ -42,7 +45,6 @@ export const VehiclesView: React.FC = () => {
   const [expAmount, setExpAmount] = useState('');
   const [expDate, setExpDate] = useState(() => new Date().toISOString().split('T')[0]);
   const [expNotes, setExpNotes] = useState('');
-  const [expMileage, setExpMileage] = useState('');
 
   // Edit vehicle states
   const [isEditVehicleOpen, setIsEditVehicleOpen] = useState(false);
@@ -50,6 +52,22 @@ export const VehiclesView: React.FC = () => {
   const [editVehName, setEditVehName] = useState('');
   const [editVehType, setEditVehType] = useState<VehicleType>('Car');
   const [editRegNum, setEditRegNum] = useState('');
+
+  // Auto-reset and configure form states when popup opens
+  useEffect(() => {
+    if (isLogExpenseOpen) {
+      const todayStr = new Date().toISOString().split('T')[0];
+      setExpDate(todayStr);
+      setExpAmount('');
+      setExpNotes('');
+      setExpType('Petrol');
+      if (vehicles.length > 0) {
+        setSelectedVehId(vehicles[0].id);
+      } else {
+        setSelectedVehId('');
+      }
+    }
+  }, [isLogExpenseOpen, vehicles]);
 
   const handleAddVehicle = (e: React.FormEvent) => {
     e.preventDefault();
@@ -84,7 +102,8 @@ export const VehiclesView: React.FC = () => {
 
   const handleLogExpense = (e: React.FormEvent) => {
     e.preventDefault();
-    const amountVal = parseFloat(expAmount);
+    const cleanAmount = expAmount.replace(/[^\d]/g, '');
+    const amountVal = parseFloat(cleanAmount);
     if (!selectedVehId || isNaN(amountVal) || amountVal <= 0) return;
 
     addVehicleExpense({
@@ -93,12 +112,10 @@ export const VehiclesView: React.FC = () => {
       amount: amountVal,
       date: expDate,
       notes: expNotes || undefined,
-      mileage: expType === 'Petrol' && expMileage ? parseFloat(expMileage) : undefined,
     });
 
     setExpAmount('');
     setExpNotes('');
-    setExpMileage('');
     setIsLogExpenseOpen(false);
   };
 
@@ -200,10 +217,6 @@ export const VehiclesView: React.FC = () => {
             const fuelSum = vehExps.filter((ve) => ve.type === 'Petrol').reduce((sum, ve) => sum + ve.amount, 0);
             const maintSum = vehExps.filter((ve) => ['Service', 'Repairs', 'Accessories'].includes(ve.type)).reduce((sum, ve) => sum + ve.amount, 0);
             
-            // Get latest mileage
-            const petrolLogs = vehExps.filter((ve) => ve.type === 'Petrol' && ve.mileage);
-            const latestMileage = petrolLogs.length > 0 ? petrolLogs[0].mileage : undefined;
-
             return (
               <div
                 key={veh.id}
@@ -247,7 +260,7 @@ export const VehiclesView: React.FC = () => {
                 </div>
 
                 {/* Substats */}
-                <div className="grid grid-cols-3 gap-2 bg-slate-50/50 p-3 rounded-2xl border border-slate-100 text-center">
+                <div className="grid grid-cols-2 gap-2 bg-slate-50/50 p-3 rounded-2xl border border-slate-100 text-center">
                   <div>
                     <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wide block">
                       Petrol
@@ -262,15 +275,6 @@ export const VehiclesView: React.FC = () => {
                     </span>
                     <span className="text-xs font-bold text-slate-805 mt-0.5">
                       ₹{maintSum.toLocaleString('en-IN')}
-                    </span>
-                  </div>
-                  <div>
-                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wide block">
-                      Mileage Log
-                    </span>
-                    <span className="text-xs font-bold text-blue-650 mt-0.5 flex items-center justify-center gap-0.5">
-                      <Gauge className="w-3.5 h-3.5 text-blue-500" />
-                      {latestMileage ? `${latestMileage} km` : '--'}
                     </span>
                   </div>
                 </div>
@@ -312,11 +316,6 @@ export const VehiclesView: React.FC = () => {
                       <p className="text-[10px] text-slate-400 flex items-center gap-1.5 mt-0.5">
                         <span>{ve.date}</span>
                         {ve.notes && <span>• {ve.notes}</span>}
-                        {ve.mileage && (
-                          <span className="bg-slate-100 text-[9px] px-1.5 rounded-full font-semibold text-slate-500">
-                            {ve.mileage} km reading
-                          </span>
-                        )}
                       </p>
                     </div>
                   </div>
@@ -512,128 +511,158 @@ export const VehiclesView: React.FC = () => {
 
       {/* ---------------- MODAL: Log Vehicle Expense ---------------- */}
       {isLogExpenseOpen && (
-        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl border border-slate-200 shadow-xl max-w-sm w-full p-6 animate-slide-up relative">
-            <div className="flex justify-between items-center pb-4 border-b border-slate-100 mb-4">
-              <h3 className="text-md font-bold text-slate-805">Log Vehicle Expense</h3>
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
+          <div className="bg-white rounded-3xl border border-slate-200/60 shadow-xl max-w-lg w-full max-h-[90vh] flex flex-col overflow-hidden animate-slide-up relative">
+            
+            {/* Header */}
+            <div className="flex justify-between items-center px-6 sm:px-8 pt-6 sm:pt-8 pb-4 border-b border-slate-100 bg-white">
+              <h3 className="text-2xl font-bold text-slate-900">Log Vehicle Expense</h3>
               <button
                 onClick={() => setIsLogExpenseOpen(false)}
-                className="text-slate-400 hover:text-slate-700 text-xs font-semibold"
+                type="button"
+                className="w-9 h-9 flex items-center justify-center rounded-full bg-slate-100 hover:bg-slate-200 text-slate-800 transition-all focus:outline-none"
               >
-                Close
+                <X className="w-5 h-5 stroke-[2.5]" />
               </button>
             </div>
 
-            <form onSubmit={handleLogExpense} className="space-y-4">
-              <div>
-                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1.5">
-                  Select Vehicle
-                </label>
-                <select
-                  value={selectedVehId}
-                  onChange={(e) => setSelectedVehId(e.target.value)}
-                  className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-blue-500 font-semibold"
-                >
-                  {vehicles.map((v) => (
-                    <option key={v.id} value={v.id}>
-                      {v.name} ({v.type})
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
+            {/* Form */}
+            <form onSubmit={handleLogExpense} className="flex-1 flex flex-col min-h-0 overflow-hidden">
+              
+              {/* Scrollable Fields */}
+              <div className="flex-grow overflow-y-auto px-6 sm:px-8 py-6 space-y-6">
+                
+                {/* Select Vehicle */}
                 <div>
-                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1.5">
-                    Expense Type
+                  <label className="block text-sm font-semibold text-slate-500 mb-2">
+                    Select Vehicle
                   </label>
-                  <select
-                    value={expType}
-                    onChange={(e) => setExpType(e.target.value as VehicleExpenseType)}
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-blue-500 font-semibold"
-                  >
-                    <option value="Petrol">Petrol</option>
-                    <option value="Service">Service</option>
-                    <option value="Repairs">Repairs</option>
-                    <option value="Insurance">Insurance</option>
-                    <option value="Challan">Challan</option>
-                    <option value="Accessories">Accessories</option>
-                  </select>
+                  <div className="relative">
+                    <select
+                      value={selectedVehId}
+                      onChange={(e) => setSelectedVehId(e.target.value)}
+                      className="w-full px-4 py-3 bg-[#f3f4f6] rounded-2xl text-slate-900 font-semibold text-base appearance-none focus:outline-none focus:ring-0 border-0"
+                    >
+                      {vehicles.map((v) => (
+                        <option key={v.id} value={v.id}>
+                          {v.name} ({v.type})
+                        </option>
+                      ))}
+                    </select>
+                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-4 text-slate-500">
+                      <ChevronDown className="w-5 h-5 stroke-[1.5]" />
+                    </div>
+                  </div>
                 </div>
 
-                <div>
-                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1.5">
-                    Amount (₹)
-                  </label>
-                  <input
-                    type="number"
-                    required
-                    placeholder="0.00"
-                    value={expAmount}
-                    onChange={(e) => setExpAmount(e.target.value)}
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-blue-500 font-bold"
-                  />
-                </div>
-              </div>
+                {/* Expense Type & Amount side-by-side */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-500 mb-2">
+                      Expense Type
+                    </label>
+                    <div className="relative">
+                      <select
+                        value={expType}
+                        onChange={(e) => setExpType(e.target.value as VehicleExpenseType)}
+                        className="w-full px-4 py-3 bg-[#f3f4f6] rounded-2xl text-slate-900 font-semibold text-base appearance-none focus:outline-none focus:ring-0 border-0"
+                      >
+                        <option value="Petrol">Petrol</option>
+                        <option value="Service">Service</option>
+                        <option value="Repairs">Repairs</option>
+                        <option value="Insurance">Insurance</option>
+                        <option value="Challan">Challan</option>
+                        <option value="Accessories">Accessories</option>
+                      </select>
+                      <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-4 text-slate-500">
+                        <ChevronDown className="w-5 h-5 stroke-[1.5]" />
+                      </div>
+                    </div>
+                  </div>
 
-              {/* Only show mileage field for Petrol logs */}
-              {expType === 'Petrol' && (
-                <div>
-                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1.5">
-                    Current Mileage (km reading - Optional)
-                  </label>
-                  <input
-                    type="number"
-                    placeholder="e.g. 15420"
-                    value={expMileage}
-                    onChange={(e) => setExpMileage(e.target.value)}
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-blue-500 font-semibold"
-                  />
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-500 mb-2">
+                      Amount (₹)
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="₹ 2,000"
+                      value={expAmount}
+                      onChange={(e) => {
+                        const rawVal = e.target.value;
+                        if (!rawVal || rawVal === '₹' || rawVal === '₹ ') {
+                          setExpAmount('');
+                          return;
+                        }
+                        const cleanVal = rawVal.replace(/[^\d]/g, '');
+                        if (!cleanVal) {
+                          setExpAmount('');
+                          return;
+                        }
+                        const num = parseInt(cleanVal, 10);
+                        setExpAmount(`₹ ${num.toLocaleString('en-IN')}`);
+                      }}
+                      className="w-full px-4 py-3 bg-[#f3f4f6] rounded-2xl text-slate-900 font-bold text-base focus:outline-none focus:ring-0 border-0"
+                    />
+                  </div>
                 </div>
-              )}
 
-              <div className="grid grid-cols-1 gap-2">
+                {/* Date Input */}
                 <div>
-                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1.5">
+                  <label className="block text-sm font-semibold text-slate-500 mb-2">
                     Date
                   </label>
+                  <div className="relative">
+                    <CalIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-800" />
+                    <input
+                      type="date"
+                      required
+                      value={expDate}
+                      onChange={(e) => setExpDate(e.target.value)}
+                      className="w-full min-w-0 pl-12 pr-4 py-3 bg-[#f3f4f6] rounded-2xl text-slate-900 font-semibold text-base focus:outline-none focus:ring-0 border-0"
+                    />
+                  </div>
+                </div>
+
+                {/* Remark / Notes Input */}
+                <div>
+                  <label className="block text-sm font-semibold text-slate-500 mb-2">
+                    Remark / Notes
+                  </label>
                   <input
-                    type="date"
-                    required
-                    value={expDate}
-                    onChange={(e) => setExpDate(e.target.value)}
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none"
+                    type="text"
+                    placeholder="e.g. HP Petrol Pump, oil change"
+                    value={expNotes}
+                    onChange={(e) => setExpNotes(e.target.value)}
+                    className="w-full px-4 py-3 bg-[#f3f4f6] rounded-2xl text-slate-900 font-semibold text-base focus:outline-none focus:ring-0 border-0"
                   />
                 </div>
+
+                {/* Sync Badge */}
+                <div className="bg-blue-50 border border-blue-100 rounded-2xl p-3 text-xs text-blue-800">
+                  💡 Logging a vehicle expense automatically updates your general transactions ledger, keeping monthly charts in sync.
+                </div>
+
               </div>
 
-              <div>
-                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1.5">
-                  Notes
-                </label>
-                <input
-                  type="text"
-                  placeholder="e.g. HP Petrol Pump, oil change"
-                  value={expNotes}
-                  onChange={(e) => setExpNotes(e.target.value)}
-                  className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none"
-                />
+              {/* Fixed Footer Buttons */}
+              <div className="border-t border-slate-100 bg-white px-6 sm:px-8 py-4 flex justify-between gap-4 z-10">
+                <button
+                  type="button"
+                  onClick={() => setIsLogExpenseOpen(false)}
+                  className="flex-1 py-3.5 border border-blue-600 hover:bg-blue-50 text-blue-600 rounded-full text-base font-semibold transition-all focus:outline-none text-center"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 py-3.5 bg-blue-600 hover:bg-blue-700 text-white rounded-full text-base font-semibold transition-all focus:outline-none text-center shadow-sm"
+                >
+                  Confirm Expense
+                </button>
               </div>
 
-              <div className="bg-blue-50 border border-blue-100 p-2.5 rounded-xl text-[10px] text-blue-800">
-                💡 Logging a vehicle expense automatically updates your general transactions ledger, keeping monthly charts in sync.
-              </div>
-
-              <button
-                type="submit"
-                onClick={(e) => {
-                  // Let's manually trigger log submit helper since we have that.
-                  // Wait, onSubmit of the form is already handled, let's keep it simple!
-                }}
-                className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-full text-xs font-bold transition-all mt-4"
-              >
-                Confirm Expense
-              </button>
             </form>
           </div>
         </div>

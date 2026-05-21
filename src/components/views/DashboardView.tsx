@@ -219,7 +219,7 @@ export const DashboardView: React.FC = () => {
       </div>
 
       {/* Summary KPI Cards Grid */}
-      <div className="grid grid-cols-2 lg:grid-cols-5 gap-3.5">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3.5">
         
         {/* KPI: Monthly Salary */}
         <div className="bg-white border border-slate-200/80 rounded-2xl p-4 shadow-sm flex flex-col justify-between">

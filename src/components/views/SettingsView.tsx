@@ -7,9 +7,6 @@ import {
   Building,
   Calendar,
   Wallet,
-  Shield,
-  Moon,
-  Sun,
   Download,
   RotateCcw,
   CreditCard,
@@ -37,9 +34,6 @@ export const SettingsView: React.FC = () => {
   const [mainPaymentMethod, setMainPaymentMethod] = useState<PaymentMethodType>(user?.mainPaymentMethod || 'UPI');
 
   // General settings
-  const [isDarkMode, setIsDarkMode] = useState(false);
-  const [isPinLockEnabled, setIsPinLockEnabled] = useState(false);
-  const [securityPin, setSecurityPin] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
 
   const handleSaveProfile = (e: React.FormEvent) => {
@@ -132,7 +126,6 @@ export const SettingsView: React.FC = () => {
                 <Building className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-slate-400" />
                 <input
                   type="text"
-                  required
                   value={companyName}
                   onChange={(e) => setCompanyName(e.target.value)}
                   className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none"
@@ -198,64 +191,7 @@ export const SettingsView: React.FC = () => {
         </form>
       </div>
 
-      {/* Visual Preference Mock */}
-      <div className="bg-white border border-slate-200/80 rounded-3xl p-5 shadow-sm grid grid-cols-1 sm:grid-cols-2 gap-4">
-        
-        {/* Theme Settings */}
-        <div className="space-y-2">
-          <h4 className="text-xs font-bold text-slate-800">Visual Theme</h4>
-          <p className="text-[10px] text-slate-400">Manage dark mode appearances</p>
-          <div className="flex items-center justify-between p-3.5 bg-slate-50 rounded-2xl border border-slate-100">
-            <span className="text-xs font-bold text-slate-700 flex items-center gap-2">
-              {isDarkMode ? <Moon className="w-4 h-4 text-blue-500" /> : <Sun className="w-4 h-4 text-amber-500" />}
-              <span>Dark Mode Toggle</span>
-            </span>
-            <button
-              onClick={() => {
-                setIsDarkMode(!isDarkMode);
-                triggerSuccess(`Switched to ${!isDarkMode ? 'Dark' : 'Light'} Mode (Visual Simulation)`);
-              }}
-              className={`w-10 h-6 rounded-full p-1 transition-all ${
-                isDarkMode ? 'bg-blue-600' : 'bg-slate-300'
-              }`}
-            >
-              <div
-                className={`w-4 h-4 rounded-full bg-white transition-all transform ${
-                  isDarkMode ? 'translate-x-4' : 'translate-x-0'
-                }`}
-              />
-            </button>
-          </div>
-        </div>
 
-        {/* PIN Security Options */}
-        <div className="space-y-2">
-          <h4 className="text-xs font-bold text-slate-800">App Security PIN</h4>
-          <p className="text-[10px] text-slate-400">Protect financial records with PIN</p>
-          <div className="flex items-center justify-between p-3.5 bg-slate-50 rounded-2xl border border-slate-100">
-            <span className="text-xs font-bold text-slate-700 flex items-center gap-2">
-              <Shield className="w-4 h-4 text-blue-600" />
-              <span>Enable PIN Lock</span>
-            </span>
-            <button
-              onClick={() => {
-                setIsPinLockEnabled(!isPinLockEnabled);
-                triggerSuccess(`${!isPinLockEnabled ? 'Enabled' : 'Disabled'} PIN lock mock`);
-              }}
-              className={`w-10 h-6 rounded-full p-1 transition-all ${
-                isPinLockEnabled ? 'bg-blue-600' : 'bg-slate-300'
-              }`}
-            >
-              <div
-                className={`w-4 h-4 rounded-full bg-white transition-all transform ${
-                  isPinLockEnabled ? 'translate-x-4' : 'translate-x-0'
-                }`}
-              />
-            </button>
-          </div>
-        </div>
-
-      </div>
 
       {/* Backup utilities */}
       <div className="bg-white border border-slate-200/80 rounded-3xl p-5 shadow-sm space-y-4">

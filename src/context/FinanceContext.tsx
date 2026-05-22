@@ -233,25 +233,90 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
       if (peopleRes.error) console.error('Error fetching people:', peopleRes.error);
 
       // Set mapped state
-      setTransactions((txRes.data || []).map(mapTransactionFromDB));
+      const allTxs = txRes.data || [];
+      const normalTxs = allTxs.filter((t: any) => !t.notes?.startsWith('[loan_emi_template]'));
+      const templateTxs = allTxs.filter((t: any) => t.notes?.startsWith('[loan_emi_template]'));
+
+      setTransactions(normalTxs.map(mapTransactionFromDB));
       setCards((cardsRes.data || []).map(mapCreditCardFromDB));
       setVehicles((vehiclesRes.data || []).map(mapVehicleFromDB));
       setVehicleExpenses((vExpensesRes.data || []).map(mapVehicleExpenseFromDB));
       setCardHistory((cardHistRes.data || []).map(mapCardHistoryFromDB));
       setPeople((peopleRes.data || []).map(mapPersonFromDB));
 
-      // Load loans/EMIs from localStorage
+      // Parse fetched template loans
+      const fetchedLoans: LoanEMI[] = [];
+      for (const t of templateTxs) {
+        if (t.notes) {
+          try {
+            const loanJson = t.notes.substring('[loan_emi_template]'.length);
+            const loanObj = JSON.parse(loanJson);
+            loanObj.id = t.id; // ensure ID matches the database row ID
+            fetchedLoans.push(loanObj);
+          } catch (err) {
+            console.error('Error parsing synced loan template:', err);
+          }
+        }
+      }
+
+      // Load loans/EMIs from localStorage to check for migration
+      let localLoans: LoanEMI[] = [];
       const savedLoans = localStorage.getItem(`antara_loans_emis_${userId}`);
       if (savedLoans) {
         try {
-          setLoans(JSON.parse(savedLoans));
+          localLoans = JSON.parse(savedLoans);
         } catch (err) {
           console.error('Error parsing saved loans:', err);
-          setLoans([]);
         }
-      } else {
-        setLoans([]);
       }
+
+      const migratedLoans: LoanEMI[] = [...fetchedLoans];
+
+      for (const localLoan of localLoans) {
+        // If this local loan is already in fetchedLoans (by matching ID or by matching name/startDate/amount), skip
+        const alreadyExists = fetchedLoans.some(
+          (fl) => fl.id === localLoan.id || (fl.name === localLoan.name && fl.startDate === localLoan.startDate && fl.amount === localLoan.amount)
+        );
+        if (!alreadyExists) {
+          console.log('Migrating local loan to cloud:', localLoan.name);
+          try {
+            const { data, error } = await supabase
+              .from('transactions')
+              .insert({
+                user_id: userId,
+                amount: localLoan.amount,
+                type: 'Spent',
+                category: 'EMI',
+                tags: ['Need'],
+                payment_method: localLoan.cardId ? 'Credit Card' : (parsedUser.mainPaymentMethod || 'UPI'),
+                notes: `[loan_emi_template]${JSON.stringify(localLoan)}`,
+                date: localLoan.startDate,
+                card_id: localLoan.cardId || null,
+                vehicle_id: localLoan.vehicleId || null,
+              })
+              .select()
+              .single();
+
+            if (error) throw error;
+            if (data) {
+              const updatedLocalLoan = { ...localLoan, id: data.id };
+              await supabase
+                .from('transactions')
+                .update({
+                  notes: `[loan_emi_template]${JSON.stringify(updatedLocalLoan)}`
+                })
+                .eq('id', data.id);
+
+              migratedLoans.push(updatedLocalLoan);
+            }
+          } catch (migrateErr) {
+            console.error('Error migrating loan:', localLoan.name, migrateErr);
+          }
+        }
+      }
+
+      setLoans(migratedLoans);
+      localStorage.setItem(`antara_loans_emis_${userId}`, JSON.stringify(migratedLoans));
     } catch (err) {
       console.error('Error loading data from Supabase:', err);
     } finally {
@@ -483,8 +548,12 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
   };
 
   const addTransaction = async (t: Omit<Transaction, 'id'>, skipVehicleExpenseLog?: boolean) => {
-    if (!authUserId) return;
+    if (!authUserId) {
+      console.warn('[addTransaction] No authUserId, returning early.');
+      return;
+    }
 
+    console.log('[addTransaction] Inserting transaction:', t);
     try {
       // 1. Insert transaction
       const { data: txData, error: txError } = await supabase
@@ -507,25 +576,46 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
         .select()
         .single();
 
-      if (txError) throw txError;
-      if (!txData) return;
+      if (txError) {
+        console.error('[addTransaction] Supabase insert error:', txError);
+        throw txError;
+      }
+      if (!txData) {
+        console.warn('[addTransaction] Supabase returned no data.');
+        return;
+      }
 
+      console.log('[addTransaction] Supabase insert success:', txData);
       const mappedTx = mapTransactionFromDB(txData);
       setTransactions((prev) => [mappedTx, ...prev]);
 
       // 2. If CC, update card due
       if (t.paymentMethod === 'Credit Card' && t.cardId) {
-        const card = cards.find((c) => c.id === t.cardId);
-        if (card) {
-          const newDue = card.currentDue + t.amount;
-          const newStatus = newDue > card.creditLimit ? 'Pending' : card.status;
+        console.log('[addTransaction] Fetching latest credit card status from DB for cardId:', t.cardId);
+        const { data: latestCard, error: fetchError } = await supabase
+          .from('credit_cards')
+          .select('current_due, credit_limit, status')
+          .eq('id', t.cardId)
+          .maybeSingle();
 
+        if (fetchError) {
+          console.error('[addTransaction] Error fetching latest credit card status:', fetchError);
+        }
+
+        if (latestCard) {
+          const currentDue = latestCard.current_due || 0;
+          const creditLimit = latestCard.credit_limit || 0;
+          const status = latestCard.status || 'Active';
+          const newDue = currentDue + t.amount;
+          const newStatus = newDue > creditLimit ? 'Pending' : status;
+
+          console.log('[addTransaction] Updating credit card due:', t.cardId, 'newDue:', newDue);
           const { error: cardError } = await supabase
             .from('credit_cards')
             .update({ current_due: newDue, status: newStatus })
             .eq('id', t.cardId);
 
-          if (cardError) console.error('Error updating credit card due:', cardError);
+          if (cardError) console.error('[addTransaction] Error updating credit card due:', cardError);
           else {
             setCards((prev) =>
               prev.map((c) =>
@@ -533,6 +623,8 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
               )
             );
           }
+        } else {
+          console.warn('[addTransaction] Credit card not found in DB:', t.cardId);
         }
       }
 
@@ -546,6 +638,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
         else if (t.category === 'EMI') vType = 'Service';
         else vType = 'Repairs';
 
+        console.log('[addTransaction] Creating vehicle expense log for vehicle:', t.vehicleId, 'type:', vType);
         const { data: veData, error: veError } = await supabase
           .from('vehicle_expenses')
           .insert({
@@ -559,14 +652,16 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
           .select()
           .single();
 
-        if (veError) console.error('Error creating vehicle expense log:', veError);
+        if (veError) console.error('[addTransaction] Error creating vehicle expense log:', veError);
         if (veData) {
+          console.log('[addTransaction] Successfully created vehicle expense log:', veData);
           setVehicleExpenses((prev) => [mapVehicleExpenseFromDB(veData), ...prev]);
         }
       }
 
     } catch (err) {
-      console.error('Error adding transaction:', err);
+      console.error('[addTransaction] Error in addTransaction:', err);
+      throw err;
     }
   };
 
@@ -756,6 +851,15 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
       setVehicles((prev) => prev.filter((v) => v.id !== id));
       setVehicleExpenses((prev) => prev.filter((ve) => ve.vehicleId !== id));
+
+      // Dissociate loans from the deleted vehicle
+      if (authUserId) {
+        const updatedLoans = loans.map((l) => 
+          l.vehicleId === id ? { ...l, vehicleId: undefined } : l
+        );
+        setLoans(updatedLoans);
+        localStorage.setItem(`antara_loans_emis_${authUserId}`, JSON.stringify(updatedLoans));
+      }
     } catch (err) {
       console.error('Error deleting vehicle:', err);
     }
@@ -865,17 +969,61 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const addLoan = async (l: Omit<LoanEMI, 'id'>) => {
     if (!authUserId) return;
-    const newLoan: LoanEMI = {
-      ...l,
-      id: typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2, 9),
-    };
-    const updatedLoans = [...loans, newLoan];
-    setLoans(updatedLoans);
-    localStorage.setItem(`antara_loans_emis_${authUserId}`, JSON.stringify(updatedLoans));
+    try {
+      const tempId = typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2, 9);
+      const tempLoan: LoanEMI = { ...l, id: tempId };
+
+      const { data, error } = await supabase
+        .from('transactions')
+        .insert({
+          user_id: authUserId,
+          amount: l.amount,
+          type: 'Spent',
+          category: 'EMI',
+          tags: ['Need'],
+          payment_method: l.cardId ? 'Credit Card' : (user?.mainPaymentMethod || 'UPI'),
+          notes: `[loan_emi_template]${JSON.stringify(tempLoan)}`,
+          date: l.startDate,
+          card_id: l.cardId || null,
+          vehicle_id: l.vehicleId || null,
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+      if (data) {
+        const finalLoan: LoanEMI = { ...l, id: data.id };
+        const { error: updateError } = await supabase
+          .from('transactions')
+          .update({
+            notes: `[loan_emi_template]${JSON.stringify(finalLoan)}`
+          })
+          .eq('id', data.id);
+
+        if (updateError) console.error('Error updating loan template with db id:', updateError);
+
+        const updatedLoans = [...loans, finalLoan];
+        setLoans(updatedLoans);
+        localStorage.setItem(`antara_loans_emis_${authUserId}`, JSON.stringify(updatedLoans));
+      }
+    } catch (err) {
+      console.error('Error adding loan:', err);
+    }
   };
 
   const deleteLoan = async (id: string) => {
     if (!authUserId) return;
+    try {
+      const { error } = await supabase
+        .from('transactions')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+    } catch (err) {
+      console.error('Error deleting loan template from database:', err);
+    }
+
     const updatedLoans = loans.filter((l) => l.id !== id);
     setLoans(updatedLoans);
     localStorage.setItem(`antara_loans_emis_${authUserId}`, JSON.stringify(updatedLoans));
@@ -905,22 +1053,72 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
   };
 
   useEffect(() => {
+    console.log('[runSync] useEffect triggered. authUserId:', authUserId, 'loading:', loading, 'syncRunning:', syncRunningRef.current, 'loans count:', loans.length);
     if (!authUserId || loading || syncRunningRef.current || loans.length === 0) return;
 
     const runSync = async () => {
       syncRunningRef.current = true;
+      console.log('[runSync] Starting sync loop...');
       try {
+        // 1. Check for stale vehicle/card references in existing loans
+        const cleanedLoans = loans.map((loan) => {
+          let updated = false;
+          let vehicleId = loan.vehicleId;
+          let cardId = loan.cardId;
+
+          if (vehicleId && !vehicles.some((v) => v.id === vehicleId)) {
+            vehicleId = undefined;
+            updated = true;
+          }
+          if (cardId && !cards.some((c) => c.id === cardId)) {
+            cardId = undefined;
+            updated = true;
+          }
+          if (updated) {
+            return { ...loan, vehicleId, cardId };
+          }
+          return loan;
+        });
+
+        const hasUpdates = cleanedLoans.some((cl, idx) => cl.vehicleId !== loans[idx].vehicleId || cl.cardId !== loans[idx].cardId);
+        if (hasUpdates) {
+          console.log('[runSync] Stale vehicle/card references detected. Updating loans state, localStorage & Supabase.');
+          for (let i = 0; i < cleanedLoans.length; i++) {
+            if (cleanedLoans[i].vehicleId !== loans[i].vehicleId || cleanedLoans[i].cardId !== loans[i].cardId) {
+              const loan = cleanedLoans[i];
+              try {
+                await supabase
+                  .from('transactions')
+                  .update({
+                    notes: `[loan_emi_template]${JSON.stringify(loan)}`,
+                    vehicle_id: loan.vehicleId || null,
+                    card_id: loan.cardId || null,
+                  })
+                  .eq('id', loan.id);
+              } catch (dbErr) {
+                console.error('Error updating cleaned loan in database:', dbErr);
+              }
+            }
+          }
+          setLoans(cleanedLoans);
+          localStorage.setItem(`antara_loans_emis_${authUserId}`, JSON.stringify(cleanedLoans));
+          return;
+        }
+
         const today = new Date();
         const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+        console.log('[runSync] todayStr:', todayStr);
 
         const toAdd: { loan: LoanEMI; monthIndex: number; payDate: string; marker: string }[] = [];
 
         for (const loan of loans) {
+          console.log('[runSync] checking loan:', loan.name, 'startDate:', loan.startDate, 'tenureMonths:', loan.tenureMonths);
           for (let i = 0; i < loan.tenureMonths; i++) {
             const payDate = getPaymentDate(loan.startDate, i);
             if (payDate <= todayStr) {
               const marker = `[loan_emi_sync:${loan.id}:${i}]`;
               const exists = transactions.some((t) => t.notes && t.notes.includes(marker));
+              console.log(`[runSync] payDate: ${payDate}, marker: ${marker}, exists: ${exists}`);
               if (!exists) {
                 toAdd.push({ loan, monthIndex: i, payDate, marker });
               }
@@ -928,6 +1126,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
           }
         }
 
+        console.log('[runSync] Transactions to add:', toAdd.length);
         if (toAdd.length > 0) {
           // Sort toAdd chronologically so transactions are created in order
           toAdd.sort((a, b) => a.payDate.localeCompare(b.payDate));
@@ -939,28 +1138,35 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
             const paymentMethod: PaymentMethodType = loan.cardId ? 'Credit Card' : (user?.mainPaymentMethod || 'UPI');
             const skipLog = !loan.vehicleId;
 
-            await addTransaction({
-              amount: loan.amount,
-              type: 'Spent',
-              category: 'EMI',
-              tags: [tag],
-              paymentMethod,
-              notes: `${marker} ${loan.name} (${loan.subType || loan.type} Month ${monthIndex + 1}/${loan.tenureMonths})`,
-              date: payDate,
-              vehicleId: loan.vehicleId,
-              cardId: loan.cardId,
-            }, skipLog);
+            console.log('[runSync] Attempting to add transaction for loan:', loan.name, 'payDate:', payDate, 'marker:', marker);
+            try {
+              await addTransaction({
+                amount: loan.amount,
+                type: 'Spent',
+                category: 'EMI',
+                tags: [tag],
+                paymentMethod,
+                notes: `${marker} ${loan.name} (${loan.subType || loan.type} Month ${monthIndex + 1}/${loan.tenureMonths})`,
+                date: payDate,
+                vehicleId: loan.vehicleId,
+                cardId: loan.cardId,
+              }, skipLog);
+              console.log('[runSync] Successfully added transaction for loan:', loan.name, 'payDate:', payDate);
+            } catch (txErr) {
+              console.error(`[runSync] Error adding transaction for loan ${loan.name} at date ${payDate}:`, txErr);
+            }
           }
         }
       } catch (err) {
-        console.error('Error running loans/EMIs transaction sync:', err);
+        console.error('[runSync] Error running loans/EMIs transaction sync:', err);
       } finally {
         syncRunningRef.current = false;
+        console.log('[runSync] Sync loop finished.');
       }
     };
 
     runSync();
-  }, [loans, transactions, authUserId, loading, user?.mainPaymentMethod]);
+  }, [loans, transactions, authUserId, loading, user?.mainPaymentMethod, vehicles, cards]);
 
   // FINANCIAL SCORE SYSTEM
   // Savings Ratio (30%) + Budget Discipline (30%) + Credit Card Health (20%) + Savings Habit (20%)

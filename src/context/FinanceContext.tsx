@@ -56,6 +56,8 @@ interface FinanceContextType {
   loans: LoanEMI[];
   addLoan: (l: Omit<LoanEMI, 'id'>) => Promise<void>;
   deleteLoan: (id: string) => Promise<void>;
+  darkMode: boolean;
+  toggleDarkMode: () => void;
 }
 
 const FinanceContext = createContext<FinanceContextType | undefined>(undefined);
@@ -162,6 +164,31 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
     const d = new Date();
     return MONTHS[d.getMonth()];
   });
+
+  const [darkMode, setDarkMode] = useState<boolean>(false);
+
+  useEffect(() => {
+    const saved = localStorage.getItem('spendly_dark_mode') === 'true';
+    setDarkMode(saved);
+    if (saved) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, []);
+
+  const toggleDarkMode = () => {
+    setDarkMode((prev) => {
+      const next = !prev;
+      localStorage.setItem('spendly_dark_mode', String(next));
+      if (next) {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+      return next;
+    });
+  };
 
   // Fetch all data for the authenticated user from Supabase
   const fetchUserData = async (authUser: any) => {
@@ -1296,6 +1323,8 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
         loans,
         addLoan,
         deleteLoan,
+        darkMode,
+        toggleDarkMode,
       }}
     >
       {children}

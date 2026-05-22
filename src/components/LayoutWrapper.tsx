@@ -17,6 +17,8 @@ import {
   LogOut,
   ChevronDown,
   Users,
+  Sun,
+  Moon,
 } from 'lucide-react';
 
 interface LayoutWrapperProps {
@@ -28,7 +30,7 @@ interface LayoutWrapperProps {
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
 export const LayoutWrapper: React.FC<LayoutWrapperProps> = ({ activeTab, setActiveTab, children }) => {
-  const { user, logout, currentMonth, setCurrentMonth } = useFinance();
+  const { user, logout, currentMonth, setCurrentMonth, darkMode, toggleDarkMode } = useFinance();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isMonthDropdownOpen, setIsMonthDropdownOpen] = useState(false);
@@ -56,7 +58,7 @@ export const LayoutWrapper: React.FC<LayoutWrapperProps> = ({ activeTab, setActi
       <aside className="hidden lg:flex flex-col w-64 bg-white border-r border-slate-200/80 fixed h-full z-20">
         {/* Brand Logo */}
         <div className="h-16 flex items-center px-6 border-b border-slate-100">
-          <img src="/SPENDLY.svg" alt="Spendly Logo" className="h-8 w-auto object-contain" />
+          <img src={darkMode ? "/SPENDLY_white.svg" : "/SPENDLY.svg"} alt="Spendly Logo" className="h-8 w-auto object-contain" />
         </div>
 
         {/* Navigation Links */}
@@ -118,7 +120,7 @@ export const LayoutWrapper: React.FC<LayoutWrapperProps> = ({ activeTab, setActi
       >
         <div className="h-16 flex items-center justify-between px-6 border-b border-slate-100">
           <div className="flex items-center">
-            <img src="/SPENDLY.svg" alt="Spendly Logo" className="h-7 w-auto object-contain" />
+            <img src={darkMode ? "/SPENDLY_white.svg" : "/SPENDLY.svg"} alt="Spendly Logo" className="h-7 w-auto object-contain" />
           </div>
           <button
             onClick={() => setIsSidebarOpen(false)}
@@ -233,6 +235,15 @@ export const LayoutWrapper: React.FC<LayoutWrapperProps> = ({ activeTab, setActi
             >
               <Plus className="w-4 h-4" />
               <span className="hidden sm:inline">Add Expense</span>
+            </button>
+
+            {/* Dark Mode Toggle */}
+            <button
+              onClick={toggleDarkMode}
+              className="p-2 border border-slate-200 rounded-full hover:bg-slate-50 text-slate-500 hover:text-slate-900 transition-all cursor-pointer"
+              title={darkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
+            >
+              {darkMode ? <Sun className="w-4 h-4 text-amber-500" /> : <Moon className="w-4 h-4" />}
             </button>
 
             {/* Notification bell */}

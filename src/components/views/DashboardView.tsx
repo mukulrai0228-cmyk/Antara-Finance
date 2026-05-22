@@ -40,6 +40,7 @@ export const DashboardView: React.FC = () => {
     financialScoreColor,
     currentMonth,
     cards,
+    darkMode,
   } = useFinance();
 
   const [mounted, setMounted] = useState(false);
@@ -322,7 +323,12 @@ export const DashboardView: React.FC = () => {
                   <XAxis dataKey="name" stroke="#94a3b8" fontSize={10} tickLine={false} axisLine={false} />
                   <YAxis stroke="#94a3b8" fontSize={10} tickLine={false} axisLine={false} />
                   <Tooltip
-                    contentStyle={{ background: '#ffffff', borderRadius: '12px', border: '1px solid #cbd5e1' }}
+                    contentStyle={{
+                      background: darkMode ? '#172030' : '#ffffff',
+                      borderRadius: '12px',
+                      border: darkMode ? '1px solid #2b3954' : '1px solid #cbd5e1',
+                      color: darkMode ? '#ffffff' : '#0f172a',
+                    }}
                     labelClassName="font-bold text-xs"
                     formatter={(val) => [`₹${val}`, 'Spent']}
                   />

@@ -28,7 +28,7 @@ import {
 } from 'recharts';
 
 export const ReportsView: React.FC = () => {
-  const { transactions, user, currentMonth, cards } = useFinance();
+  const { transactions, user, currentMonth, cards, darkMode } = useFinance();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -233,7 +233,12 @@ export const ReportsView: React.FC = () => {
                   <XAxis dataKey="category" stroke="#94a3b8" fontSize={9} tickLine={false} axisLine={false} />
                   <YAxis stroke="#94a3b8" fontSize={9} tickLine={false} axisLine={false} />
                   <Tooltip
-                    contentStyle={{ background: '#ffffff', borderRadius: '12px', border: '1px solid #e2e8f0' }}
+                    contentStyle={{
+                      background: darkMode ? '#172030' : '#ffffff',
+                      borderRadius: '12px',
+                      border: darkMode ? '1px solid #2b3954' : '1px solid #e2e8f0',
+                      color: darkMode ? '#ffffff' : '#0f172a',
+                    }}
                     formatter={(val) => [`₹${val}`, 'Spent']}
                   />
                   <Bar dataKey="Amount" fill="#2563eb" radius={[6, 6, 0, 0]} />

@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
   --background: #f8fafc; /* Slate 50 for page backgrounds */
   --foreground: #0f172a; /* Slate 900 */
@@ -15,11 +17,73 @@
   --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.02);
   --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.03), 0 2px 4px -2px rgb(0 0 0 / 0.03);
   --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.04), 0 4px 6px -4px rgb(0 0 0 / 0.04);
+
+  /* Color token base definitions */
+  --white: #ffffff;
+  --slate-50: #f8fafc;
+  --slate-100: #f1f5f9;
+  --slate-150: #ebf0f5;
+  --slate-200: #e2e8f0;
+  --slate-300: #cbd5e1;
+  --slate-400: #94a3b8;
+  --slate-450: #7e8fa4;
+  --slate-500: #64748b;
+  --slate-600: #475569;
+  --slate-700: #334155;
+  --slate-800: #1e293b;
+  --slate-900: #0f172a;
+}
+
+.dark {
+  --background: #090d16; /* Deep Slate 950 */
+  --foreground: #f8fafc; /* Slate 50 */
+  --card-bg: #131a2c; /* Slate 900 / dark mode card background */
+  
+  --primary-blue: #3b82f6; /* Blue 500 */
+  --primary-blue-light: #1c2638; /* Blue 900 tint */
+  --primary-blue-hover: #60a5fa; /* Blue 400 */
+  
+  --border: #1e2738; /* Slate 800 */
+  --input: #172030; /* Slate 800 */
+  
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.3);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.4), 0 2px 4px -2px rgb(0 0 0 / 0.4);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.5), 0 4px 6px -4px rgb(0 0 0 / 0.5);
+
+  /* Color token dark mode overrides */
+  --white: #131a2c;
+  --slate-50: #090d16;
+  --slate-100: #172030;
+  --slate-150: #1c2638;
+  --slate-200: #1e2738;
+  --slate-300: #2b3954;
+  --slate-400: #94a3b8;
+  --slate-450: #a3b3cc;
+  --slate-500: #cbd5e1;
+  --slate-600: #e2e8f0;
+  --slate-700: #f1f5f9;
+  --slate-800: #f8fafc;
+  --slate-900: #ffffff;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  
+  --color-white: var(--white);
+  --color-slate-50: var(--slate-50);
+  --color-slate-100: var(--slate-100);
+  --color-slate-150: var(--slate-150);
+  --color-slate-200: var(--slate-200);
+  --color-slate-300: var(--slate-300);
+  --color-slate-400: var(--slate-400);
+  --color-slate-450: var(--slate-450);
+  --color-slate-500: var(--slate-500);
+  --color-slate-600: var(--slate-600);
+  --color-slate-700: var(--slate-700);
+  --color-slate-800: var(--slate-800);
+  --color-slate-900: var(--slate-900);
+
   --font-sans: var(--font-geist-sans), Arial, sans-serif;
   --font-mono: var(--font-geist-mono), monospace;
   
@@ -63,6 +127,10 @@ body {
   backdrop-filter: blur(12px);
   border: 1px solid rgba(255, 255, 255, 0.5);
 }
+.dark .glassmorphism {
+  background: rgba(19, 26, 44, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
 
 /* Premium shadows & hover transitions */
 .premium-card {
@@ -71,11 +139,17 @@ body {
   box-shadow: var(--shadow-sm);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
+.dark .premium-card {
+  border-color: rgba(30, 39, 56, 0.8);
+}
 
 .premium-card:hover {
   transform: translateY(-2px);
   box-shadow: var(--shadow-md);
   border-color: rgba(37, 99, 235, 0.15);
+}
+.dark .premium-card:hover {
+  border-color: rgba(59, 130, 246, 0.3);
 }
 
 /* Scrollbars */
@@ -92,9 +166,15 @@ body {
   background: #cbd5e1;
   border-radius: 4px;
 }
+.dark ::-webkit-scrollbar-thumb {
+  background: #2b3954;
+}
 
 ::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
+}
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #37486b;
 }
 
 /* Month Selector active highlight */

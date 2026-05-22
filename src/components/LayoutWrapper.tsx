@@ -15,7 +15,6 @@ import {
   Bell,
   Plus,
   LogOut,
-  Navigation,
   ChevronDown,
   Users,
 } from 'lucide-react';
@@ -56,14 +55,8 @@ export const LayoutWrapper: React.FC<LayoutWrapperProps> = ({ activeTab, setActi
       {/* 1. Sidebar - Desktop (Fixed) */}
       <aside className="hidden lg:flex flex-col w-64 bg-white border-r border-slate-200/80 fixed h-full z-20">
         {/* Brand Logo */}
-        <div className="h-16 flex items-center gap-2.5 px-6 border-b border-slate-100">
-          <div className="w-9 h-9 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-md shadow-blue-500/10">
-            <Navigation className="w-4 h-4 rotate-45" />
-          </div>
-          <div>
-            <h1 className="font-bold text-slate-900 tracking-tight text-sm">Antara Finance</h1>
-            <span className="text-[10px] font-semibold text-blue-600 block mt-[-2px]">MONEY COMPANION</span>
-          </div>
+        <div className="h-16 flex items-center px-6 border-b border-slate-100">
+          <img src="/SPENDLY.svg" alt="Spendly Logo" className="h-8 w-auto object-contain" />
         </div>
 
         {/* Navigation Links */}
@@ -124,11 +117,8 @@ export const LayoutWrapper: React.FC<LayoutWrapperProps> = ({ activeTab, setActi
         }`}
       >
         <div className="h-16 flex items-center justify-between px-6 border-b border-slate-100">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-blue-600 text-white flex items-center justify-center">
-              <Navigation className="w-4 h-4 rotate-45" />
-            </div>
-            <h1 className="font-bold text-slate-900 text-sm">Antara Finance</h1>
+          <div className="flex items-center">
+            <img src="/SPENDLY.svg" alt="Spendly Logo" className="h-7 w-auto object-contain" />
           </div>
           <button
             onClick={() => setIsSidebarOpen(false)}

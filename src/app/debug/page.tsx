@@ -109,7 +109,7 @@ export default function DebugPage() {
 
   return (
     <div className="p-8 max-w-4xl mx-auto font-sans space-y-6">
-      <h1 className="text-3xl font-bold text-slate-800">Antara Finance Diagnostics</h1>
+      <h1 className="text-3xl font-bold text-slate-800">Spendly Diagnostics</h1>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Auth State */}

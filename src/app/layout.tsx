@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Antara Finance - Premium Money Companion",
+  title: "Spendly - Premium Money Companion",
   description: "A calm personal money companion tailored for Indian users.",
 };
 

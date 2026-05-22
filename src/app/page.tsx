@@ -26,7 +26,7 @@ export default function Home() {
             <div className="absolute inset-0 rounded-full border-4 border-blue-50 animate-pulse"></div>
             <div className="w-12 h-12 border-4 border-transparent border-t-blue-600 rounded-full animate-spin"></div>
           </div>
-          <p className="text-xs font-semibold text-slate-400 tracking-wider uppercase">Antara Finance</p>
+          <p className="text-xs font-semibold text-slate-400 tracking-wider uppercase">Spendly</p>
           <p className="text-xs text-slate-500 font-medium font-sans">Syncing with database...</p>
         </div>
       </div>

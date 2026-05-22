@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { useFinance } from '../context/FinanceContext';
-import { ShieldCheck, TrendingUp, Sparkles, Navigation } from 'lucide-react';
+import { ShieldCheck, TrendingUp, Sparkles } from 'lucide-react';
 import { supabase } from '../lib/supabaseClient';
 
 export const LoginScreen: React.FC = () => {
@@ -36,11 +36,11 @@ export const LoginScreen: React.FC = () => {
 
       <div className="sm:mx-auto sm:w-full sm:max-w-md text-center">
         {/* Logo Icon */}
-        <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-blue-600 text-white shadow-lg shadow-blue-500/20 mb-4 animate-pulse-subtle">
-          <Navigation className="w-6 h-6 rotate-45" />
+        <div className="inline-flex items-center justify-center mb-4 animate-pulse-subtle">
+          <img src="/SPENDLY_1.svg" alt="Spendly Logo" className="w-16 h-16 object-contain" />
         </div>
         <h2 className="text-3xl font-extrabold text-slate-900 tracking-tight">
-          Antara Finance
+          Spendly
         </h2>
         <p className="mt-2 text-sm text-slate-500">
           A calm personal money companion.

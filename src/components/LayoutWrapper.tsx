@@ -314,58 +314,62 @@ export const LayoutWrapper: React.FC<LayoutWrapperProps> = ({ activeTab, setActi
       <AddExpenseModal isOpen={isAddModalOpen} onClose={() => setIsAddModalOpen(false)} />
 
       {/* Mobile Bottom Navigation Bar */}
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-slate-200/80 px-4 py-2 flex items-center justify-between z-40 pb-safe shadow-lg">
+      <div className="lg:hidden fixed bottom-6 left-4 right-4 max-w-md mx-auto bg-white/85 dark:bg-slate-900/80 backdrop-blur-lg border border-slate-200/40 dark:border-slate-800/40 px-3 py-2 flex items-center justify-between z-40 shadow-xl rounded-full">
         {/* Tab 1: Dashboard */}
         <button
           onClick={() => setActiveTab('dashboard')}
-          className={`flex flex-col items-center gap-1 flex-1 py-1.5 transition-all ${
-            activeTab === 'dashboard' ? 'text-blue-600 font-bold' : 'text-slate-450 hover:text-slate-650'
+          className={`flex flex-col items-center gap-0.5 px-4 py-1.5 rounded-full transition-all ${
+            activeTab === 'dashboard'
+              ? 'bg-slate-100/90 dark:bg-slate-800/90 text-blue-600 font-bold scale-105 shadow-sm'
+              : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
           }`}
         >
-          <LayoutDashboard className="w-5 h-5" />
-          <span className="text-[10px] tracking-tight">Home</span>
+          <LayoutDashboard className="w-4.5 h-4.5" />
+          <span className="text-[9px] tracking-tight">Home</span>
         </button>
 
         {/* Tab 2: Expenses */}
         <button
           onClick={() => setActiveTab('expenses')}
-          className={`flex flex-col items-center gap-1 flex-1 py-1.5 transition-all ${
-            activeTab === 'expenses' ? 'text-blue-600 font-bold' : 'text-slate-450 hover:text-slate-650'
+          className={`flex flex-col items-center gap-0.5 px-4 py-1.5 rounded-full transition-all ${
+            activeTab === 'expenses'
+              ? 'bg-slate-100/90 dark:bg-slate-800/90 text-blue-600 font-bold scale-105 shadow-sm'
+              : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
           }`}
         >
-          <CalendarRange className="w-5 h-5" />
-          <span className="text-[10px] tracking-tight">Expenses</span>
+          <CalendarRange className="w-4.5 h-4.5" />
+          <span className="text-[9px] tracking-tight">Expenses</span>
         </button>
 
         {/* Tab 3: Quick Add Button */}
-        <div className="flex-1 flex justify-center -mt-6 relative z-50">
-          <button
-            onClick={() => setIsAddModalOpen(true)}
-            className="w-12 h-12 rounded-full bg-blue-600 hover:bg-blue-700 text-white flex items-center justify-center shadow-lg shadow-blue-500/30 transform hover:scale-105 active:scale-95 transition-all"
-            title="Add Expense"
-          >
-            <Plus className="w-6 h-6" />
-          </button>
-        </div>
+        <button
+          onClick={() => setIsAddModalOpen(true)}
+          className="w-10 h-10 rounded-full bg-blue-600 hover:bg-blue-700 text-white flex items-center justify-center shadow-lg shadow-blue-500/20 transform hover:scale-105 active:scale-95 transition-all cursor-pointer mx-1"
+          title="Add Expense"
+        >
+          <Plus className="w-5.5 h-5.5" />
+        </button>
 
         {/* Tab 4: Cards */}
         <button
           onClick={() => setActiveTab('cards')}
-          className={`flex flex-col items-center gap-1 flex-1 py-1.5 transition-all ${
-            activeTab === 'cards' ? 'text-blue-600 font-bold' : 'text-slate-450 hover:text-slate-655'
+          className={`flex flex-col items-center gap-0.5 px-4 py-1.5 rounded-full transition-all ${
+            activeTab === 'cards'
+              ? 'bg-slate-100/90 dark:bg-slate-800/90 text-blue-600 font-bold scale-105 shadow-sm'
+              : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
           }`}
         >
-          <CreditCard className="w-5 h-5" />
-          <span className="text-[10px] tracking-tight">Cards</span>
+          <CreditCard className="w-4.5 h-4.5" />
+          <span className="text-[9px] tracking-tight">Cards</span>
         </button>
 
         {/* Tab 5: Menu/More */}
         <button
           onClick={() => setIsSidebarOpen(true)}
-          className="flex flex-col items-center gap-1 flex-1 py-1.5 text-slate-450 hover:text-slate-650 transition-all"
+          className="flex flex-col items-center gap-0.5 px-4 py-1.5 rounded-full text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all"
         >
-          <Menu className="w-5 h-5" />
-          <span className="text-[10px] tracking-tight">More</span>
+          <Menu className="w-4.5 h-4.5" />
+          <span className="text-[9px] tracking-tight">More</span>
         </button>
       </div>
     </div>

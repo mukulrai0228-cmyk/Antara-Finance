@@ -192,9 +192,9 @@ export const LayoutWrapper: React.FC<LayoutWrapperProps> = ({ activeTab, setActi
           <div className="flex items-center gap-3">
             <button
               onClick={() => setIsSidebarOpen(true)}
-              className="lg:hidden p-2 rounded-full border border-slate-250/60 hover:bg-slate-50 text-slate-600"
+              className="lg:hidden p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400 rounded-lg transition-all"
             >
-              <Menu className="w-5 h-5" />
+              <Menu className="w-6 h-6" />
             </button>
             <h2 className="text-md sm:text-lg font-bold text-slate-900 tracking-tight">
               {getPageTitle()}
@@ -264,19 +264,28 @@ export const LayoutWrapper: React.FC<LayoutWrapperProps> = ({ activeTab, setActi
               </button>
               
               {showNotifications && (
-                <div className="absolute right-0 mt-2 w-72 bg-white border border-slate-250 rounded-2xl shadow-xl z-50 py-2">
-                  <div className="px-4 py-2 border-b border-slate-100 flex justify-between items-center">
-                    <span className="text-xs font-bold text-slate-800">Notifications</span>
-                    <span className="text-[10px] text-blue-600 font-semibold cursor-pointer">Mark all read</span>
-                  </div>
-                  <div className="divide-y divide-slate-100 max-h-60 overflow-y-auto">
-                    <div className="p-3.5 hover:bg-slate-50 text-xs">
-                      <p className="font-semibold text-slate-800">Salary Credited!</p>
-                      <p className="text-slate-450 text-[10px] mt-0.5">Your monthly salary of ₹{user?.monthlySalary.toLocaleString('en-IN')} has been added to dashboard analytics.</p>
+                <div className="fixed inset-0 w-full h-full bg-white dark:bg-slate-900 z-50 flex flex-col md:absolute md:inset-auto md:right-0 md:mt-2 md:w-80 md:h-auto md:bg-white md:dark:bg-slate-900 md:border md:border-slate-250 dark:md:border-slate-800 md:rounded-2xl md:shadow-xl md:py-2">
+                  <div className="px-5 py-4 md:px-4 md:py-2 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center">
+                    <span className="text-sm md:text-xs font-bold text-slate-800 dark:text-slate-100">Notifications</span>
+                    <div className="flex items-center gap-3">
+                      <span className="text-xs md:text-[10px] text-blue-600 font-semibold cursor-pointer">Mark all read</span>
+                      <button
+                        onClick={() => setShowNotifications(false)}
+                        className="p-1 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 cursor-pointer"
+                        title="Close notifications"
+                      >
+                        <X className="w-5 h-5 md:w-4 md:h-4" />
+                      </button>
                     </div>
-                    <div className="p-3.5 hover:bg-slate-50 text-xs">
-                      <p className="font-semibold text-slate-800">Credit Card Bill Due</p>
-                      <p className="text-slate-450 text-[10px] mt-0.5">Your HDFC Card payment of is upcoming. Avoid late fees by paying from the Cards tab.</p>
+                  </div>
+                  <div className="divide-y divide-slate-100 dark:divide-slate-800 flex-1 md:max-h-60 overflow-y-auto">
+                    <div className="p-5 md:p-3.5 hover:bg-slate-50 dark:hover:bg-slate-800/50 text-sm md:text-xs">
+                      <p className="font-semibold text-slate-800 dark:text-slate-200">Salary Credited!</p>
+                      <p className="text-slate-450 dark:text-slate-400 text-xs md:text-[10px] mt-0.5">Your monthly salary of ₹{user?.monthlySalary.toLocaleString('en-IN')} has been added to dashboard analytics.</p>
+                    </div>
+                    <div className="p-5 md:p-3.5 hover:bg-slate-50 dark:hover:bg-slate-800/50 text-sm md:text-xs">
+                      <p className="font-semibold text-slate-800 dark:text-slate-200">Credit Card Bill Due</p>
+                      <p className="text-slate-450 dark:text-slate-400 text-xs md:text-[10px] mt-0.5">Your HDFC Card payment of is upcoming. Avoid late fees by paying from the Cards tab.</p>
                     </div>
                   </div>
                 </div>

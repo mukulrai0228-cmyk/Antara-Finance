@@ -166,6 +166,13 @@ export const LayoutWrapper: React.FC<LayoutWrapperProps> = ({ activeTab, setActi
               <p className="text-[10px] text-slate-450 truncate">{user?.email}</p>
             </div>
             <button
+              onClick={toggleDarkMode}
+              className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full text-slate-400 transition-all"
+              title={darkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
+            >
+              {darkMode ? <Sun className="w-4.5 h-4.5 text-amber-500" /> : <Moon className="w-4.5 h-4.5" />}
+            </button>
+            <button
               onClick={logout}
               className="p-2 hover:bg-red-50 hover:text-red-550 rounded-full text-slate-400"
             >
@@ -198,7 +205,7 @@ export const LayoutWrapper: React.FC<LayoutWrapperProps> = ({ activeTab, setActi
           <div className="flex items-center gap-2 sm:gap-3.5">
             
             {/* Current Month Selector */}
-            <div className="relative">
+            <div className="relative hidden md:block">
               <button
                 onClick={() => setIsMonthDropdownOpen(!isMonthDropdownOpen)}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-slate-200 hover:bg-slate-50 text-xs font-semibold text-slate-700 transition-all"
@@ -231,7 +238,7 @@ export const LayoutWrapper: React.FC<LayoutWrapperProps> = ({ activeTab, setActi
             {/* Quick Add Expense */}
             <button
               onClick={() => setIsAddModalOpen(true)}
-              className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white px-3.5 py-1.5 rounded-full text-xs font-bold transition-all shadow-sm hover:shadow-md"
+              className="hidden md:flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white px-3.5 py-1.5 rounded-full text-xs font-bold transition-all shadow-sm hover:shadow-md"
             >
               <Plus className="w-4 h-4" />
               <span className="hidden sm:inline">Add Expense</span>
@@ -240,7 +247,7 @@ export const LayoutWrapper: React.FC<LayoutWrapperProps> = ({ activeTab, setActi
             {/* Dark Mode Toggle */}
             <button
               onClick={toggleDarkMode}
-              className="p-2 border border-slate-200 rounded-full hover:bg-slate-50 text-slate-500 hover:text-slate-900 transition-all cursor-pointer"
+              className="hidden md:flex p-2 border border-slate-200 rounded-full hover:bg-slate-50 text-slate-500 hover:text-slate-900 transition-all cursor-pointer"
               title={darkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
             >
               {darkMode ? <Sun className="w-4 h-4 text-amber-500" /> : <Moon className="w-4 h-4" />}
@@ -272,31 +279,6 @@ export const LayoutWrapper: React.FC<LayoutWrapperProps> = ({ activeTab, setActi
                       <p className="text-slate-450 text-[10px] mt-0.5">Your HDFC Card payment of is upcoming. Avoid late fees by paying from the Cards tab.</p>
                     </div>
                   </div>
-                </div>
-              )}
-            </div>
-
-            {/* User profile dropdown - mobile / quick logout */}
-            <div className="relative lg:hidden">
-              <button
-                onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
-                className="w-9 h-9 rounded-full bg-white border border-slate-200 overflow-hidden"
-              >
-                <img src={user?.avatarUrl} alt="User Avatar" />
-              </button>
-              {isProfileDropdownOpen && (
-                <div className="absolute right-0 mt-2 w-48 bg-white border border-slate-200 rounded-2xl shadow-lg z-50 py-2 px-1">
-                  <div className="px-3 py-2 border-b border-slate-100 text-xs">
-                    <p className="font-bold text-slate-850 truncate">{user?.fullName}</p>
-                    <p className="text-[10px] text-slate-400 truncate">{user?.email}</p>
-                  </div>
-                  <button
-                    onClick={logout}
-                    className="w-full flex items-center gap-2 px-3 py-2 rounded-full text-left text-xs font-semibold text-red-500 hover:bg-red-50 mt-1 transition-all"
-                  >
-                    <LogOut className="w-4 h-4" />
-                    <span>Log Out</span>
-                  </button>
                 </div>
               )}
             </div>
@@ -344,10 +326,11 @@ export const LayoutWrapper: React.FC<LayoutWrapperProps> = ({ activeTab, setActi
         {/* Tab 3: Quick Add Button */}
         <button
           onClick={() => setIsAddModalOpen(true)}
-          className="w-10 h-10 rounded-full bg-blue-600 hover:bg-blue-700 text-white flex items-center justify-center shadow-lg shadow-blue-500/20 transform hover:scale-105 active:scale-95 transition-all cursor-pointer mx-1"
+          className="flex flex-col items-center gap-0.5 px-4 py-1.5 rounded-full text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all"
           title="Add Expense"
         >
-          <Plus className="w-5.5 h-5.5" />
+          <Plus className="w-4.5 h-4.5" />
+          <span className="text-[9px] tracking-tight">Add</span>
         </button>
 
         {/* Tab 4: Cards */}
@@ -361,15 +344,6 @@ export const LayoutWrapper: React.FC<LayoutWrapperProps> = ({ activeTab, setActi
         >
           <CreditCard className="w-4.5 h-4.5" />
           <span className="text-[9px] tracking-tight">Cards</span>
-        </button>
-
-        {/* Tab 5: Menu/More */}
-        <button
-          onClick={() => setIsSidebarOpen(true)}
-          className="flex flex-col items-center gap-0.5 px-4 py-1.5 rounded-full text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all"
-        >
-          <Menu className="w-4.5 h-4.5" />
-          <span className="text-[9px] tracking-tight">More</span>
         </button>
       </div>
     </div>

@@ -31,6 +31,115 @@ import {
   Tooltip,
 } from 'recharts';
 
+const AnalogClock: React.FC = () => {
+  const [time, setTime] = useState<Date | null>(null);
+
+  useEffect(() => {
+    setTime(new Date());
+    const timer = setInterval(() => {
+      setTime(new Date());
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  if (!time) {
+    return (
+      <div className="w-16 h-16 rounded-full bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm flex items-center justify-center">
+        <div className="w-1 h-1 rounded-full bg-slate-400 animate-pulse" />
+      </div>
+    );
+  }
+
+  const hours = time.getHours();
+  const minutes = time.getMinutes();
+  const seconds = time.getSeconds();
+
+  // angles
+  const hrAngle = (hours % 12) * 30 + minutes * 0.5;
+  const minAngle = minutes * 6;
+  const secAngle = seconds * 6;
+
+  return (
+    <div className="w-16 h-16 rounded-full bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm flex items-center justify-center relative hover:scale-105 transition-all duration-300">
+      <svg width="100%" height="100%" viewBox="0 0 100 100" className="transform -rotate-90">
+        <circle cx="50" cy="15" r="1.5" className="fill-slate-300 dark:fill-slate-700" />
+        <circle cx="85" cy="50" r="1.5" className="fill-slate-300 dark:fill-slate-700" />
+        <circle cx="50" cy="85" r="1.5" className="fill-slate-300 dark:fill-slate-700" />
+        <circle cx="15" cy="50" r="1.5" className="fill-slate-300 dark:fill-slate-700" />
+        
+        {/* Hour */}
+        <line
+          x1="50"
+          y1="50"
+          x2={50 + 22 * Math.cos((hrAngle * Math.PI) / 180)}
+          y2={50 + 22 * Math.sin((hrAngle * Math.PI) / 180)}
+          className="stroke-slate-800 dark:stroke-slate-100"
+          strokeWidth="3.5"
+          strokeLinecap="round"
+        />
+        {/* Minute */}
+        <line
+          x1="50"
+          y1="50"
+          x2={50 + 32 * Math.cos((minAngle * Math.PI) / 180)}
+          y2={50 + 32 * Math.sin((minAngle * Math.PI) / 180)}
+          className="stroke-slate-500 dark:stroke-slate-400"
+          strokeWidth="2.2"
+          strokeLinecap="round"
+          opacity="0.8"
+        />
+        {/* Second */}
+        <line
+          x1="50"
+          y1="50"
+          x2={50 + 36 * Math.cos((secAngle * Math.PI) / 180)}
+          y2={50 + 36 * Math.sin((secAngle * Math.PI) / 180)}
+          stroke="#2563eb"
+          strokeWidth="1.2"
+          strokeLinecap="round"
+        />
+        <circle cx="50" cy="50" r="3" fill="#2563eb" />
+      </svg>
+    </div>
+  );
+};
+
+const CalendarWidget: React.FC = () => {
+  const [date, setDate] = useState<Date | null>(null);
+
+  useEffect(() => {
+    setDate(new Date());
+  }, []);
+
+  if (!date) {
+    return (
+      <div className="w-16 h-16 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm flex items-center justify-center">
+        <div className="w-5 h-5 border-2 border-slate-200 border-t-blue-500 rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
+  const dayNum = date.getDate();
+  const monthName = date.toLocaleDateString('en-US', { month: 'short' });
+
+  return (
+    <div className="w-16 h-16 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm flex flex-col items-center justify-between overflow-hidden hover:scale-105 transition-all duration-300">
+      <div className="w-full bg-blue-600 dark:bg-blue-750 text-white text-[9px] font-extrabold py-0.5 text-center uppercase tracking-widest leading-none">
+        {monthName}
+      </div>
+      <div className="flex-1 flex items-center justify-center">
+        <span className="text-xl font-black text-slate-800 dark:text-slate-100 leading-none">
+          {dayNum}
+        </span>
+      </div>
+      <div className="w-full text-center text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase pb-1 tracking-wider leading-none">
+        {dayName}
+      </div>
+    </div>
+  );
+};
+
 export const DashboardView: React.FC = () => {
   const {
     user,
@@ -206,20 +315,28 @@ export const DashboardView: React.FC = () => {
     .sort((a, b) => b.amount - a.amount)
     .slice(0, 4);
 
+  const firstName = (user?.fullName || 'Mukul').split(' ')[0];
+
   return (
     <div className="space-y-6">
       
-      {/* Dynamic Welcome Heading */}
-      <div className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-3xl p-6 text-white shadow-md relative overflow-hidden">
-        <div className="absolute top-[-50%] right-[-10%] w-72 h-72 rounded-full bg-white/10 blur-2xl" />
-        <h2 className="text-xl sm:text-2xl font-bold">
-          {greeting}, {user?.fullName || 'Mukul'}
-        </h2>
-        <p className="text-xs sm:text-sm text-blue-100 mt-1">
-          {remainingSalary > 0
-            ? 'Your spending looks controlled this month. Keep it up!'
-            : 'Remaining funds are low. Pause non-essential purchases for a few days.'}
-        </p>
+      {/* Dynamic Welcome Heading with Widgets */}
+      <div className="flex flex-row items-center justify-between gap-4 py-2 px-1 border-b border-slate-150/60 dark:border-slate-800/60 pb-5">
+        <div className="min-w-0">
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight leading-tight">
+            {greeting}, <span className="text-blue-600 dark:text-blue-500">{firstName}</span>
+          </h2>
+          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1 font-semibold truncate">
+            {remainingSalary > 0
+              ? 'Your spending looks controlled this month. Keep it up!'
+              : 'Remaining funds are low. Pause non-essential purchases for a few days.'}
+          </p>
+        </div>
+
+        <div className="flex items-center gap-3 shrink-0">
+          <AnalogClock />
+          <CalendarWidget />
+        </div>
       </div>
 
       {/* Summary KPI Cards Grid */}
